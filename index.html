@@ -3,7 +3,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 针对iPhone等移动端进行完美适配，包含安全区域 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>🇬🇧🇮🇸 英国+冰岛 漫画风深度游攻略</title>
     <style>
         :root {
@@ -14,23 +15,28 @@
             --bg: #f8f8f8;
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
-            font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, 'Comic Sans MS', sans-serif;
-            background-color: #eee;
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Helvetica, 'Comic Sans MS', sans-serif;
+            background-color: #e0e0e0; /* PC端背景色 */
             margin: 0;
             padding: 0;
             color: var(--black);
+            /* 适配iPhone底部小黑条 */
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
+        /* 核心容器：手机端全屏，PC端居中显示为手机尺寸 */
         .app-container {
             max-width: 480px;
             margin: 0 auto;
             background-color: var(--bg);
             min-height: 100vh;
             position: relative;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
         }
 
         /* 漫画风网点背景 */
@@ -39,7 +45,7 @@
                               radial-gradient(var(--yellow) 15%, transparent 16%);
             background-size: 20px 20px;
             background-position: 0 0, 10px 10px;
-            padding: 40px 20px 30px;
+            padding: calc(40px + env(safe-area-inset-top)) 20px 30px; /* 适配iPhone刘海/灵动岛 */
             border-bottom: 4px solid var(--black);
             text-align: center;
         }
@@ -53,18 +59,19 @@
             transform: rotate(-2deg);
             border-radius: 8px;
             margin-bottom: 10px;
+            max-width: 90%;
         }
 
         .manga-title h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: clamp(20px, 6vw, 26px); /* 响应式字体 */
             font-weight: 900;
             letter-spacing: 1px;
         }
 
         .manga-title p {
             margin: 5px 0 0 0;
-            font-size: 14px;
+            font-size: clamp(12px, 4vw, 15px);
             font-weight: bold;
             color: var(--red);
         }
@@ -82,7 +89,7 @@
         .tab {
             flex: 1;
             text-align: center;
-            padding: 15px 0;
+            padding: 12px 0;
             font-weight: bold;
             font-size: 15px;
             cursor: pointer;
@@ -96,8 +103,9 @@
         /* 内容区 */
         .content-section {
             display: none;
-            padding: 20px;
+            padding: 20px 15px;
             animation: fadeIn 0.3s ease-in-out;
+            flex-grow: 1;
         }
         .content-section.active { display: block; }
 
@@ -122,10 +130,11 @@
         .card-title {
             font-size: 18px;
             font-weight: 800;
-            margin: 0 0 10px 0;
+            margin: 0 0 12px 0;
             display: flex;
             align-items: center;
             gap: 8px;
+            line-height: 1.2;
         }
 
         .card-title::before {
@@ -136,6 +145,7 @@
             background: var(--red);
             border: 2px solid var(--black);
             border-radius: 50%;
+            flex-shrink: 0;
         }
 
         /* 小红书标签 */
@@ -151,6 +161,7 @@
         }
         .tag-blue { background: var(--blue); }
         .tag-yellow { background: var(--yellow); color: var(--black); }
+        .tag-green { background: #00c250; color: white; }
 
         /* 航班信息排版 */
         .flight-route {
@@ -158,39 +169,41 @@
             justify-content: space-between;
             align-items: center;
             margin: 10px 0;
-            padding: 10px;
+            padding: 12px 10px;
             background: #f9f9f9;
             border: 2px dashed var(--black);
             border-radius: 8px;
         }
-        .flight-time { font-size: 20px; font-weight: 900; }
-        .flight-city { font-size: 12px; color: #666; font-weight: bold; }
-        .flight-arrow { flex: 1; text-align: center; position: relative; }
+        .flight-time { font-size: clamp(18px, 5vw, 22px); font-weight: 900; }
+        .flight-city { font-size: 12px; color: #666; font-weight: bold; margin-top: 4px;}
+        .flight-arrow { flex: 1; text-align: center; position: relative; margin: 0 10px; }
         .flight-arrow::after {
             content: '✈️';
             position: absolute;
-            top: -10px;
+            top: -12px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 16px;
         }
         .flight-arrow line {
-            width: 80%; height: 2px; background: var(--black); margin: 0 auto; display: block;
+            width: 100%; height: 2px; background: var(--black); margin: 0 auto; display: block;
         }
 
-        /* 警告提示框 */
+        /* 警告/高亮提示框 */
         .warning-box {
             background: var(--yellow);
             border: 2px solid var(--black);
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             font-weight: bold;
             font-size: 13px;
-            margin-top: 10px;
+            margin-top: 12px;
             display: flex;
             align-items: start;
             gap: 8px;
+            line-height: 1.5;
         }
+        .warning-box.blue { background: #e0f7fa; }
 
         /* 交互式行程列表 */
         .accordion-item {
@@ -208,24 +221,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-size: 15px;
         }
         .accordion-header:hover { background: #ffea8a; }
         .accordion-content {
             padding: 0 15px;
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease-out, padding 0.3s ease;
+            transition: max-height 0.35s ease-out, padding 0.3s ease;
             background: white;
             font-size: 14px;
             line-height: 1.6;
         }
         .accordion-item.active .accordion-content {
             padding: 15px;
-            max-height: 500px;
+            max-height: 800px;
             border-top: 3px solid var(--black);
         }
         .day-badge {
-            background: var(--black); color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 8px;
+            background: var(--black); color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; margin-right: 8px; display: inline-block;
         }
 
         /* 对话气泡 */
@@ -238,6 +252,7 @@
             margin: 20px 0;
             box-shadow: 3px 3px 0 var(--black);
             font-weight: bold;
+            line-height: 1.5;
         }
         .speech-bubble::after {
             content: '';
@@ -252,6 +267,23 @@
         }
 
         .highlight { background: linear-gradient(180deg, transparent 60%, var(--yellow) 0); padding: 0 4px; }
+        
+        .budget-list {
+            list-style: none; padding: 0; margin: 0;
+        }
+        .budget-list li {
+            font-size: 14px; margin-bottom: 12px; padding-left: 24px; position: relative; line-height: 1.5;
+        }
+        .budget-list li::before {
+            content: '💸'; position: absolute; left: 0; top: -2px;
+        }
+        
+        /* 响应式媒体查询：针对极小屏幕 */
+        @media (max-width: 350px) {
+            .flight-time { font-size: 16px; }
+            .flight-route { flex-direction: column; gap: 10px; }
+            .flight-arrow { transform: rotate(90deg); margin: 15px 0; }
+        }
 
     </style>
 </head>
@@ -264,51 +296,92 @@
             <h1>🇬🇧🇮🇸 英国+冰岛</h1>
             <p>14天绝美特种兵深度游 ✈️</p>
         </div>
-        <div style="font-weight: bold; margin-top: 10px;">
-            <span class="highlight">#伦敦跨国到冰岛</span> <span class="highlight">#签证干货</span> <span class="highlight">#保姆级攻略</span>
+        <div style="font-weight: bold; margin-top: 10px; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;">
+            <span class="highlight">#伦敦跨国到冰岛</span> <span class="highlight">#最新真实预算</span> <span class="highlight">#保姆级攻略</span>
         </div>
     </div>
 
     <!-- 导航 -->
     <div class="tabs">
-        <div class="tab active" onclick="switchTab('flight')">✈️ 航班</div>
+        <div class="tab active" onclick="switchTab('budget')">💰 预算</div>
+        <div class="tab" onclick="switchTab('flight')">✈️ 航班</div>
         <div class="tab" onclick="switchTab('visa')">🛂 签证</div>
         <div class="tab" onclick="switchTab('itinerary')">🗺️ 行程</div>
-        <div class="tab" onclick="switchTab('tips')">💡 贴士</div>
+    </div>
+
+    <!-- 预算模块 (新增并提前) -->
+    <div id="budget" class="content-section active">
+        <div class="speech-bubble">
+            家人们！根据实时的机票截图，我把预算表重新盘了一遍！跟着这个花，绝对不超标！👇
+        </div>
+
+        <div class="manga-card" style="border-color: var(--red); box-shadow: 4px 4px 0 var(--red);">
+            <h3 class="card-title" style="color: var(--red);">🎯 真实开销盘点 (人均)</h3>
+            <ul class="budget-list">
+                <li>
+                    <b>国际往返机票：</b><span style="color:var(--red); font-weight:bold; font-size: 16px;">¥6,676</span><br>
+                    <span style="font-size:12px; color:#666;">(广州⇌伦敦，含海湾航空去程+国泰航空返程)</span>
+                </li>
+                <li>
+                    <b>欧洲内陆机票：</b><span style="color:var(--blue); font-weight:bold; font-size: 16px;">¥1,892</span><br>
+                    <span style="font-size:12px; color:#666;">(伦敦⇌雷克雅未克，冰岛航空经济舱)</span>
+                </li>
+                <li style="border-top: 1px dashed #ccc; padding-top: 10px; margin-top: 10px;">
+                    <b>✈️ 机票总计：</b><span class="highlight" style="font-weight:900; font-size:18px;">¥8,568</span> /人
+                </li>
+            </ul>
+        </div>
+
+        <div class="manga-card">
+            <h3 class="card-title">🏨 当地开销预估 (吃住行游)</h3>
+            <ul class="budget-list">
+                <li><b>🇬🇧 英国段 (5天)：</b> 约 ¥6,100 - ¥9,400<br>
+                    <span style="font-size:12px; color:#666;">含伦敦住宿、餐饮、地铁/火车、大英博物馆/音乐剧等门票。</span>
+                </li>
+                <li><b>🇮🇸 冰岛段 (5天)：</b> 约 ¥10,000 - ¥15,500<br>
+                    <span style="font-size:12px; color:#666;">含冰岛住宿、高昂餐饮、跟团/租车、蓝湖温泉/冰川徒步门票。</span>
+                </li>
+            </ul>
+            <div class="warning-box">
+                🔥 <b>机酒游玩总预算：</b><br>
+                人均落在 <span style="font-size: 18px; color: var(--red);">¥24,668 - ¥33,468</span> 区间！<br>
+                (注：不含签证费和疯狂买买买的额度哦~)
+            </div>
+        </div>
     </div>
 
     <!-- 航班模块 -->
-    <div id="flight" class="content-section active">
+    <div id="flight" class="content-section">
         <div class="manga-card">
-            <h3 class="card-title">🛫 去程：广州 ⇌ 伦敦</h3>
+            <h3 class="card-title">🛫 去程：广州 ⇌ 伦敦 (¥6676内)</h3>
             <div class="xhs-tags">
-                <span class="xhs-tag">海湾航空</span>
+                <span class="xhs-tag">海湾航空 GF123/GF3</span>
                 <span class="xhs-tag tag-yellow">巴林跨天中转</span>
             </div>
             <div class="flight-route">
                 <div>
                     <div class="flight-time">19:20</div>
-                    <div class="flight-city">9-24 广州(CAN)</div>
+                    <div class="flight-city">09-24 广州(CAN T2)</div>
                 </div>
                 <div class="flight-arrow"><line></line></div>
                 <div style="text-align: right;">
                     <div class="flight-time">15:20</div>
-                    <div class="flight-city">9-25 伦敦(LHR)</div>
+                    <div class="flight-city">09-25 伦敦(LHR T4)</div>
                 </div>
             </div>
-            <p style="font-size:12px; color:#666;">*巴林停留11小时25分，无需过境签，行李直达！</p>
+            <p style="font-size:12px; color:#666; margin-top:8px;">*巴林停留11h25m，<b>无需过境签，行李直达！</b></p>
         </div>
 
-        <div class="manga-card">
-            <h3 class="card-title">🌋 中段：伦敦 ⇌ 雷克雅未克</h3>
+        <div class="manga-card" style="border-color: var(--blue);">
+            <h3 class="card-title" style="color: var(--blue);">🌋 中段：伦敦 ⇌ 冰岛 (¥1892)</h3>
             <div class="xhs-tags">
-                <span class="xhs-tag tag-blue">冰岛航空</span>
+                <span class="xhs-tag tag-blue">冰岛航空 FI473/FI472</span>
             </div>
-            <p style="font-weight:bold; font-size:14px;">▶ 去冰岛：10.01 周四</p>
-            <div class="flight-route">
+            <p style="font-weight:bold; font-size:13px; margin-bottom: 5px;">▶ 去冰岛：10-01 周四</p>
+            <div class="flight-route" style="padding: 8px;">
                 <div>
                     <div class="flight-time">15:40</div>
-                    <div class="flight-city">伦敦(LGW)</div>
+                    <div class="flight-city">伦敦(LGW N)</div>
                 </div>
                 <div class="flight-arrow"><line></line></div>
                 <div style="text-align: right;">
@@ -317,8 +390,8 @@
                 </div>
             </div>
 
-            <p style="font-weight:bold; font-size:14px; margin-top:15px;">◀ 回伦敦：10.07 周三</p>
-            <div class="flight-route">
+            <p style="font-weight:bold; font-size:13px; margin: 15px 0 5px;">◀ 回伦敦：10-07 周三</p>
+            <div class="flight-route" style="padding: 8px;">
                 <div>
                     <div class="flight-time">10:30</div>
                     <div class="flight-city">凯夫拉维克(KEF)</div>
@@ -326,21 +399,25 @@
                 <div class="flight-arrow"><line></line></div>
                 <div style="text-align: right;">
                     <div class="flight-time">14:40</div>
-                    <div class="flight-city">伦敦(LGW)</div>
+                    <div class="flight-city">伦敦(LGW N)</div>
                 </div>
+            </div>
+            
+            <div class="warning-box blue">
+                🎒 <b>行李警告：</b> 该¥1892特价票<b>全程无托运行李</b>，仅包含手提行李 1x10KG！如有大件行李记得提前买行李额！
             </div>
         </div>
 
-        <div class="manga-card" style="border-color: var(--red);">
-            <h3 class="card-title" style="color: var(--red);">🛬 返程：伦敦 ⇌ 广州</h3>
+        <div class="manga-card" style="border-color: #00c250;">
+            <h3 class="card-title" style="color: #00c250;">🛬 返程：伦敦 ⇌ 广州</h3>
             <div class="xhs-tags">
-                <span class="xhs-tag">国泰航空</span>
-                <span class="xhs-tag tag-yellow">海天联运</span>
+                <span class="xhs-tag tag-green">国泰航空 CX256/CX9847</span>
+                <span class="xhs-tag tag-yellow">海天联运回南沙</span>
             </div>
             <div class="flight-route">
                 <div>
                     <div class="flight-time">20:15</div>
-                    <div class="flight-city">10-07 伦敦(LHR)</div>
+                    <div class="flight-city">10-07 伦敦(LHR T3)</div>
                 </div>
                 <div class="flight-arrow"><line></line></div>
                 <div style="text-align: right;">
@@ -348,11 +425,12 @@
                     <div class="flight-city">10-08 广州南沙(NSZ)</div>
                 </div>
             </div>
-            <p style="font-size:12px; color:#666;">*香港中转1h45m，乘坐轮船回南沙客运码头。</p>
+            <p style="font-size:12px; color:#666; margin-top:8px;">*香港(HKG)中转1h45m，乘坐轮船直接客运回广州南沙。</p>
             
             <div class="warning-box">
-                ⚠️ 高能预警：10月7日冰岛回伦敦降落【盖特维克LGW 14:40】，回国起飞在【希思罗LHR 20:15】！<br>
-                中间有5.5小时跨机场转机！落地后请火速提取行李并打车/大巴前往LHR！
+                ⚠️ <b>转机生死时速预警：</b><br>
+                10月7日冰岛回伦敦降落在【盖特维克 <b>LGW 14:40</b>】，而回国航班在【希思罗 <b>LHR 20:15</b>】起飞！<br>
+                你有5.5小时需要跨机场转机！落地LGW后必须火速提行李并打车/大巴直奔LHR！
             </div>
         </div>
     </div>
@@ -360,27 +438,26 @@
     <!-- 签证模块 -->
     <div id="visa" class="content-section">
         <div class="speech-bubble">
-            家人们！这次是跨国游，需要办【两个签证】哦！<br>
-            <span class="highlight">首入申根国是冰岛，停留期也最长，所以申根签选冰岛！</span>
+            跨国游必须搞定【两个签证】！顺序千万别错哦！
         </div>
 
         <div class="manga-card">
-            <h3 class="card-title">🇬🇧 步骤一：英国 Standard Visitor Visa</h3>
-            <ul style="font-size: 14px; padding-left: 20px;">
-                <li><b>时间：</b>先办！官方15个工作日出签，早办早安心。</li>
-                <li><b>费用：</b>6个月多次，约1050元人民币(£115)。</li>
-                <li><b>新规：</b>现已全面实行<span class="highlight">电子签证(eVisa)</span>，不再贴纸啦！入境出示Share Code即可。</li>
-                <li><b>资金：</b>建议余额覆盖行程（人均3-5万），切忌近期大额转入！</li>
+            <h3 class="card-title">🇬🇧 第一步：英国访客签证</h3>
+            <ul style="font-size: 14px; padding-left: 20px; line-height: 1.6;">
+                <li><b>进度：</b>建议提前2-3个月（7月）启动。先拿英国签！</li>
+                <li><b>费用：</b>6个月有效期，约1050元(£115)。</li>
+                <li><b>新规注意：</b>已全面实行<span class="highlight">电子签证(eVisa)</span>！不贴纸，出签需注册UKVI账户。</li>
+                <li><b>避坑：</b>银行流水余额要足（人均3-5万），千万别突然存入大额资金！</li>
             </ul>
         </div>
 
         <div class="manga-card">
-            <h3 class="card-title">🇮🇸 步骤二：冰岛 申根旅游签证</h3>
-            <ul style="font-size: 14px; padding-left: 20px;">
-                <li><b>时间：</b>拿到英国出签、确认机酒后再办！预留3-4周。</li>
-                <li><b>递交：</b>2023年新规，由冰岛驻华使馆直接受理。</li>
-                <li><b>指纹：</b>首次申请必须本人到场录指纹（59个月内有效可免）。</li>
-                <li><b>必备：</b>保额3万欧元以上的全程旅行保险！</li>
+            <h3 class="card-title">🇮🇸 第二步：冰岛申根签证</h3>
+            <ul style="font-size: 14px; padding-left: 20px; line-height: 1.6;">
+                <li><b>规则：</b>首入申根国是冰岛且停留最长，必须向冰岛申请！由冰岛驻华使馆直接受理。</li>
+                <li><b>材料：</b>需等英国出签，提供完整机酒订单。</li>
+                <li><b>指纹：</b>首次申根必须本人到场录指纹（59个月内有效）。</li>
+                <li><b>强制要求：</b>必须买保额至少 <b>3万欧元</b> 的全程旅行保险！</li>
             </ul>
         </div>
     </div>
@@ -388,11 +465,11 @@
     <!-- 行程模块 -->
     <div id="itinerary" class="content-section">
         <div class="xhs-tags" style="justify-content: center; margin-bottom: 20px;">
-            <span class="xhs-tag tag-yellow">根据最新机票优化版行程单</span>
+            <span class="xhs-tag tag-yellow">配合真实航班优化排期</span>
         </div>
 
         <!-- 英国段 -->
-        <h4 style="margin:0 0 10px 5px;">🇬🇧 英国经典探索段 (9.25 - 10.01)</h4>
+        <h4 style="margin:0 0 10px 5px; font-size: 16px;">🇬🇧 英国经典探索 (9.24 - 10.01)</h4>
         
         <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this)">
@@ -400,147 +477,104 @@
                 <span>▼</span>
             </div>
             <div class="accordion-content">
-                <p><b>9.24：</b> 晚间广州飞往巴林。<br>
-                <b>9.25：</b> 下午15:20抵达伦敦希思罗。入住市区酒店（推荐Soho或Bloomsbury），倒时差，晚上在Covent Garden吃个晚餐，感受英伦夜色。</p>
+                <p><b>9.24：</b> 19:20 广州白云起飞。<br>
+                <b>9.25：</b> 巴林跨天中转后，15:20抵达伦敦LHR。入住市区酒店，调整时差，晚上去Covent Garden吃晚餐。</p>
             </div>
         </div>
 
         <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this)">
-                <div><span class="day-badge">Day 3</span> 9.26 伦敦地标打卡</div>
+                <div><span class="day-badge">Day 3</span> 9.26 地标Citywalk</div>
                 <span>▼</span>
             </div>
             <div class="accordion-content">
-                <p><b>上午：</b> 威斯敏斯特区域：大本钟 ➜ 威斯敏斯特教堂 ➜ 伦敦眼。<br>
-                <b>下午：</b> 白金汉宫（看卫兵换岗）➜ 圣詹姆斯公园散步 ➜ 特拉法加广场。<br>
-                <b>晚上：</b> 泰晤士河游船，Borough Market附近大快朵颐！</p>
+                <p><b>路线：</b> 威斯敏斯特教堂 ➜ 大本钟 ➜ 伦敦眼 ➜ 白金汉宫(看卫兵换岗) ➜ 泰晤士河游船 ➜ Borough Market觅食。</p>
             </div>
         </div>
 
         <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this)">
-                <div><span class="day-badge">Day 4</span> 9.27 博物馆与购物买买买</div>
+                <div><span class="day-badge">Day 4</span> 9.27 博物馆与买买买</div>
                 <span>▼</span>
             </div>
             <div class="accordion-content">
-                <p><b>上午：</b> 逛大英博物馆（必看埃及馆、中国馆）。<br>
-                <b>下午：</b> 海德公园消食，直奔哈罗德百货、牛津街、摄政街扫货。<br>
-                <b>晚上：</b> 安排一场西区音乐剧（推荐《歌剧魅影》）。</p>
+                <p><b>路线：</b> 大英博物馆(必看中国/埃及馆) ➜ 牛津街/摄政街/哈罗德百货血拼 ➜ 晚上看一场西区经典音乐剧。</p>
             </div>
         </div>
 
         <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this)">
-                <div><span class="day-badge">Day 5</span> 9.28 伦敦周边一日游</div>
+                <div><span class="day-badge">Day 5</span> 9.28 牛津/温莎一日游</div>
                 <span>▼</span>
             </div>
             <div class="accordion-content">
-                <p><b>全天：</b> 乘坐火车前往【牛津大学城】或【温莎城堡】。探访基督堂学院（哈利波特取景地）或体验皇室风范。</p>
+                <p>坐火车前往【牛津大学城】打卡哈利波特取景地，或去【温莎城堡】感受王室气派。</p>
             </div>
         </div>
 
         <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this)">
-                <div><span class="day-badge">Day 6-7</span> 9.29-9.30 伦敦深度Citywalk</div>
+                <div><span class="day-badge">Day 6-7</span> 9.29-9.30 伦敦慢生活</div>
                 <span>▼</span>
             </div>
             <div class="accordion-content">
-                <p><b>自由活动：</b> 可以去诺丁丘（Notting Hill）淘复古好物，或者探访哈利波特影城（需提前极早订票！），享受英伦慢生活。</p>
+                <p>查漏补缺，去诺丁丘淘复古集市，或者打卡各种网红咖啡厅。</p>
             </div>
         </div>
 
         <!-- 冰岛段 -->
-        <h4 style="margin:20px 0 10px 5px;">🇮🇸 冰岛奇幻自然段 (10.01 - 10.07)</h4>
+        <h4 style="margin:20px 0 10px 5px; font-size: 16px;">🇮🇸 冰岛奇幻自然 (10.01 - 10.07)</h4>
 
         <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this)">
-                <div><span class="day-badge">Day 8</span> 10.01 飞往冰岛</div>
+                <div><span class="day-badge">Day 8</span> 10.01 飞往雷克雅未克</div>
                 <span>▼</span>
             </div>
             <div class="accordion-content">
-                <p><b>下午：</b> 从伦敦LGW机场起飞，17:55抵达冰岛KEF。提车，前往雷克雅未克市区吃热狗/羊肉汤！</p>
-            </div>
-        </div>
-
-        <div class="accordion-item">
-            <div class="accordion-header" onclick="toggleAccordion(this)">
-                <div><span class="day-badge">Day 9</span> 10.02 黄金圈一日游</div>
-                <span>▼</span>
-            </div>
-            <div class="accordion-content">
-                <p><b>经典必打卡：</b> 辛格维利尔国家公园（板块大裂缝） ➜ 间歇泉（每10分钟喷发） ➜ 黄金瀑布。晚上有望追极光！</p>
+                <p><b>15:40：</b> 伦敦LGW起飞。<br><b>17:55：</b> 抵达冰岛KEF。提车，直奔市区喝一口热腾腾的冰岛羊肉汤！</p>
             </div>
         </div>
 
         <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this)">
-                <div><span class="day-badge">Day 10</span> 10.03 冰岛南岸奇观</div>
+                <div><span class="day-badge">Day 9</span> 10.02 黄金圈探秘</div>
                 <span>▼</span>
             </div>
             <div class="accordion-content">
-                <p><b>行程：</b> 塞里雅兰瀑布（水帘洞） ➜ 斯科加瀑布 ➜ 雷尼斯黑沙滩（⚠️绝对不要靠近海浪） ➜ 维克小镇。</p>
+                <p><b>必打卡：</b> 辛格维利尔国家公园(大裂缝) ➜ 间歇泉 ➜ 黄金瀑布。晚上开启首次极光追寻！</p>
             </div>
         </div>
 
         <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this)">
-                <div><span class="day-badge">Day 11</span> 10.04 瓦特纳冰川与冰河湖</div>
+                <div><span class="day-badge">Day 10</span> 10.03 冰岛南岸</div>
                 <span>▼</span>
             </div>
             <div class="accordion-content">
-                <p><b>行程：</b> 预订冰川徒步体验（3-4小时） ➜ 杰古沙龙冰河湖（看浮冰） ➜ 钻石沙滩拍绝美大片。夜宿霍芬小镇吃龙虾。</p>
+                <p><b>路线：</b> 塞里雅兰瀑布(水帘洞) ➜ 斯科加瀑布 ➜ 雷尼斯黑沙滩(⚠️警惕疯狗浪) ➜ 维克小镇。</p>
             </div>
         </div>
 
         <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this)">
-                <div><span class="day-badge">Day 12</span> 10.05 斯奈山半岛 (冰岛缩影)</div>
+                <div><span class="day-badge">Day 11</span> 10.04 瓦特纳冰川徒步</div>
                 <span>▼</span>
             </div>
             <div class="accordion-content">
-                <p><b>行程：</b> 驱车前往西部，打卡草帽山（Kirkjufell）、黑教堂。晚上返回雷克雅未克。</p>
+                <p>预约冰川徒步体验 ➜ 杰古沙龙冰河湖(浮冰游船) ➜ 钻石沙滩拍大片。夜宿霍芬小镇吃龙虾。</p>
             </div>
         </div>
 
         <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this)">
-                <div><span class="day-badge">Day 13-14</span> 10.06-10.08 蓝湖温泉 & 惊险转机返程</div>
+                <div><span class="day-badge">Day 12-14</span> 10.05-10.08 蓝湖与生死转机</div>
                 <span>▼</span>
             </div>
             <div class="accordion-content">
-                <p><b>10.06：</b> 上午打卡蓝湖温泉（必提前预约，泡奶蓝色温泉敷火山泥），下午逛雷克雅未克市区（哈尔格林姆大教堂、彩虹街）。<br>
-                <b>10.07：</b> 10:30起飞，14:40降落伦敦LGW。<b>⚠️紧急跨机场转机：</b>包车/大巴前往LHR机场！20:15搭乘国泰返程。<br>
-                <b>10.08：</b> 抵达香港，乘船回到广州南沙，完美结束特种兵之旅！</p>
+                <p><b>10.05-06：</b> 斯奈山半岛(草帽山) ➜ 必须提前预约的蓝湖温泉(泡奶蓝色火山泥)。<br>
+                <b>10.07：</b> 10:30冰岛起飞，14:40降落伦敦LGW。<b>带好行李狂奔跨越伦敦至LHR机场</b>，20:15搭乘国泰返程。<br>
+                <b>10.08：</b> 17:30抵达香港，海天联运转乘轮船，18:40抵达广州南沙。</p>
             </div>
-        </div>
-    </div>
-
-    <!-- 贴士模块 -->
-    <div id="tips" class="content-section">
-        <div class="manga-card">
-            <h3 class="card-title">💰 预算预估 (人均)</h3>
-            <ul style="font-size: 14px; padding-left: 20px;">
-                <li><b>大交通：</b>约 13000-20000元。</li>
-                <li><b>英国段 (7天)：</b>吃住行门票约 8000-11000元。</li>
-                <li><b>冰岛段 (6天)：</b>吃住租车门票约 12000-18000元。</li>
-                <li><b>总计：</b><span class="highlight">约 3.3万 - 4.9万人民币</span>（不含疯狂购物哦）。</li>
-            </ul>
-        </div>
-
-        <div class="manga-card">
-            <h3 class="card-title">🧥 穿搭指南 (9月底-10月初)</h3>
-            <p style="font-size: 14px; margin-top:5px;"><b>🇬🇧 伦敦：</b>秋风起，气温10-15℃。风衣、长袖、舒适步行鞋必带，多雨记得带伞。</p>
-            <p style="font-size: 14px;"><b>🇮🇸 冰岛：</b>气温0-10℃，风妖风阵阵！<b>冲锋衣（防风防水）是本体！</b>帽子手套保暖内衣备齐，泡蓝湖别忘了泳衣。</p>
-        </div>
-
-        <div class="manga-card">
-            <h3 class="card-title">📱 必备神器</h3>
-            <ul style="font-size: 14px; padding-left: 20px;">
-                <li><b>Google Maps：</b> 全球通用导航。</li>
-                <li><b>Aurora Forecast：</b> 追极光预测APP（9月底极光季开始啦！）。</li>
-                <li><b>Citymapper：</b> 伦敦坐地铁交通神器。</li>
-                <li><b>英标+欧标转换头：</b> 英国插座是三个方头，冰岛是两个圆孔，都要带！</li>
-            </ul>
         </div>
     </div>
 
