@@ -74,11 +74,13 @@
     .route a:hover { background:var(--yellow); }
     .route .arrow { min-height:auto; padding:0 2px; border:0; background:transparent; font-size:1.05rem; }
     .memory-photo { display:none; }
-    .step-gallery { position:relative; overflow:hidden; padding:12px 0 14px; border-bottom:2px dashed var(--line); background:linear-gradient(180deg,#fffaf0 0%,#f3f6f7 100%); }
-    .gallery-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:0 13px 5px; }
-    .gallery-kicker { color:var(--red); font-size:.76rem; font-weight:950; letter-spacing:.04em; }
-    .gallery-title { display:block; margin-top:2px; font-size:.95rem; font-weight:950; line-height:1.35; }
+    .step-gallery { position:relative; overflow:hidden; padding:11px 0 12px; border-bottom:2px dashed var(--line); background:linear-gradient(180deg,#fffaf0 0%,#f3f6f7 100%); }
+    .gallery-head { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:32px; padding:0 13px 4px; }
+    .gallery-title { display:block; min-width:0; overflow:hidden; font-size:.92rem; font-weight:950; line-height:1.35; text-overflow:ellipsis; white-space:nowrap; }
+    .gallery-head-actions { display:flex; align-items:center; gap:7px; }
     .gallery-counter { flex:0 0 auto; min-width:48px; padding:4px 8px; border:2px solid var(--ink); border-radius:999px; background:var(--yellow); font-size:.78rem; font-weight:950; text-align:center; }
+    .gallery-done { display:none; min-height:30px; padding:3px 9px; border:2px solid var(--ink); border-radius:7px; color:#fff; background:var(--red); font-size:.76rem; font-weight:950; cursor:pointer; }
+    .step-gallery.is-editing .gallery-done { display:inline-flex; align-items:center; }
     .gallery-track { display:flex; align-items:center; overflow-x:auto; gap:0; padding:8px 9% 18px; scroll-snap-type:x mandatory; scrollbar-width:none; overscroll-behavior-x:contain; }
     .gallery-track::-webkit-scrollbar { display:none; }
     .gallery-slide {
@@ -88,35 +90,63 @@
     }
     .gallery-slide:nth-child(even) { box-shadow:4px 5px 0 var(--red); transform:scale(.94) rotate(.8deg); }
     .gallery-slide.is-active { z-index:4; opacity:1; transform:scale(1) rotate(0); box-shadow:6px 7px 0 var(--yellow); }
+    .gallery-slide.is-pressing { transform:scale(.97); }
+    .gallery-slide.is-editing { z-index:7; animation:photo-jiggle .18s ease-in-out infinite alternate; }
+    @keyframes photo-jiggle { from { transform:rotate(-1.2deg) scale(.985); } to { transform:rotate(1.2deg) scale(.985); } }
     .gallery-visual { position:relative; display:grid; place-items:center; width:100%; aspect-ratio:16/9; overflow:hidden; background-color:#dcecf2; background-image:radial-gradient(#4cb4e766 18%,transparent 19%); background-size:18px 18px; }
     .gallery-visual img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-    .gallery-empty { max-width:78%; padding:14px; border:2px dashed var(--ink); border-radius:8px; background:#ffffffd9; text-align:center; }
-    .gallery-empty b,.gallery-empty span { display:block; }
-    .gallery-empty b { line-height:1.3; }
-    .gallery-empty span { margin-top:4px; color:var(--muted); font-size:.78rem; font-weight:800; }
+    .gallery-slide.has-photo .gallery-visual { cursor:zoom-in; }
+    .gallery-empty { display:grid; place-items:center; width:72px; height:72px; border:2px dashed var(--ink); border-radius:50%; background:#ffffffd9; font-size:1.65rem; }
     .gallery-slide.has-photo .gallery-empty { display:none; }
     .gallery-meta { display:grid; grid-template-columns:auto 1fr; gap:8px; align-items:start; padding:9px 10px 10px; }
     .gallery-time { display:inline-flex; min-width:52px; justify-content:center; padding:4px 6px; border-radius:6px; background:var(--navy); color:#fff; font-size:.73rem; font-weight:950; }
     .gallery-copy b { display:block; line-height:1.35; }
-    .gallery-source { display:block; margin-top:2px; color:var(--muted); font-size:.72rem; font-weight:800; }
-    .gallery-source a { text-underline-offset:2px; }
-    .gallery-actions { position:absolute; right:8px; top:8px; z-index:5; display:flex; gap:6px; }
-    .gallery-upload,.gallery-remove { min-height:34px; padding:5px 9px; border:2px solid #fff; border-radius:7px; box-shadow:2px 2px 0 var(--ink); font-size:.76rem; font-weight:950; cursor:pointer; }
-    .gallery-upload { color:#fff; background:var(--navy); }
-    .gallery-upload input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
-    .gallery-remove { display:none; color:#fff; background:var(--red); }
-    .gallery-slide.has-custom .gallery-remove { display:inline-flex; align-items:center; }
+    .gallery-actions { position:absolute; right:7px; top:7px; z-index:9; display:none; flex-wrap:wrap; justify-content:flex-end; gap:5px; max-width:92%; }
+    .gallery-slide.is-editing .gallery-actions { display:flex; }
+    .gallery-action { min-height:32px; padding:4px 8px; border:2px solid #fff; border-radius:7px; box-shadow:2px 2px 0 var(--ink); color:#fff; background:var(--navy); font-size:.73rem; font-weight:950; cursor:pointer; }
+    .gallery-action.delete { background:var(--red); }
+    .gallery-file-input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
     .gallery-nav { display:flex; align-items:center; gap:8px; padding:0 13px; }
     .gallery-arrow { width:36px; height:34px; border:2px solid var(--ink); border-radius:7px; background:#fff; font-size:1rem; font-weight:950; cursor:pointer; }
     .gallery-dots { flex:1; display:flex; gap:6px; overflow-x:auto; padding:3px 1px; scrollbar-width:none; }
     .gallery-dots::-webkit-scrollbar { display:none; }
     .gallery-dot { flex:0 0 22px; width:22px; height:22px; padding:0; border:2px solid var(--ink); border-radius:50%; background:#fff; font-size:.64rem; font-weight:950; cursor:pointer; }
     .gallery-dot.is-active { color:#fff; background:var(--red); transform:scale(1.08); }
-    .gallery-hint { margin:7px 13px 0; color:var(--muted); font-size:.76rem; font-weight:800; }
-    .gallery-status { min-height:1.2em; margin:4px 13px 0; color:var(--green); font-size:.76rem; font-weight:900; }
     .step { cursor:pointer; transition:background .18s ease,box-shadow .18s ease; }
     .step.photo-active { margin-left:-7px; padding-left:7px; background:#fff6bf; box-shadow:inset 5px 0 0 var(--red); }
     .step.photo-active time { background:var(--red); }
+    .step-note-row { display:flex; justify-content:flex-end; margin-top:6px; }
+    .step-note-toggle { min-height:30px; padding:3px 8px; border:2px solid var(--ink); border-radius:7px; background:#fff; font-size:.78rem; font-weight:950; cursor:pointer; }
+    .step-note-toggle.has-note { background:var(--yellow); }
+    .step-note-drawer { margin-top:7px; padding:8px; border:2px solid var(--ink); border-radius:8px; background:#eef8fc; animation:drawer-open .18s ease-out; }
+    .step-note-drawer[hidden] { display:none; }
+    .step-note-drawer textarea { min-height:76px; background:#fff; }
+    .step-note-save { margin:4px 1px 0; color:var(--muted); font-size:.72rem; font-weight:800; }
+    @keyframes drawer-open { from { opacity:0; transform:translateY(-5px); } }
+    .modal-layer { position:fixed; inset:0; z-index:100; display:grid; place-items:center; padding:16px; background:#07141dcc; backdrop-filter:blur(5px); }
+    .modal-layer[hidden] { display:none; }
+    .modal-card { width:min(100%,700px); max-height:calc(100vh - 32px); overflow:auto; border:3px solid var(--ink); border-radius:10px; background:var(--paper); box-shadow:7px 8px 0 var(--red); }
+    .modal-head,.modal-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 12px; }
+    .modal-head { border-bottom:2px solid var(--ink); }
+    .modal-head strong { font-size:1rem; }
+    .modal-close,.modal-btn { min-height:36px; padding:5px 11px; border:2px solid var(--ink); border-radius:7px; background:#fff; font-weight:950; cursor:pointer; }
+    .modal-btn.primary { color:#fff; background:var(--green); }
+    .crop-area { padding:12px; }
+    .crop-frame { position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; touch-action:none; border:3px solid var(--ink); background:#152531; cursor:grab; }
+    .crop-frame:active { cursor:grabbing; }
+    .crop-image { position:absolute; left:50%; top:50%; max-width:none; user-select:none; pointer-events:none; transform-origin:center; }
+    .crop-grid { position:absolute; inset:0; pointer-events:none; background:linear-gradient(90deg,transparent 33.1%,#fff8 33.3%,#fff8 33.6%,transparent 33.8%,transparent 66.2%,#fff8 66.4%,#fff8 66.7%,transparent 66.9%),linear-gradient(0deg,transparent 33.1%,#fff8 33.3%,#fff8 33.6%,transparent 33.8%,transparent 66.2%,#fff8 66.4%,#fff8 66.7%,transparent 66.9%); }
+    .crop-controls { display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center; padding:10px 0 0; font-size:.82rem; font-weight:900; }
+    .crop-controls input { width:100%; accent-color:var(--red); }
+    .lightbox-card { position:relative; width:min(100%,980px); max-height:calc(100vh - 28px); display:grid; grid-template-rows:1fr auto; overflow:hidden; border:3px solid #fff; border-radius:10px; background:#09151d; box-shadow:7px 8px 0 var(--yellow); }
+    .lightbox-image-wrap { display:grid; place-items:center; min-height:220px; max-height:calc(100vh - 120px); }
+    .lightbox-image { display:block; max-width:100%; max-height:calc(100vh - 120px); object-fit:contain; }
+    .lightbox-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; color:#fff; }
+    .lightbox-title { overflow:hidden; font-weight:900; text-overflow:ellipsis; white-space:nowrap; }
+    .toast { position:fixed; z-index:130; left:50%; bottom:24px; max-width:calc(100% - 28px); padding:9px 13px; border:2px solid var(--ink); border-radius:8px; background:var(--yellow); box-shadow:4px 4px 0 var(--ink); font-size:.82rem; font-weight:950; transform:translateX(-50%); }
+    .toast[hidden] { display:none; }
+    body.modal-open { overflow:hidden; }
+    @media (prefers-reduced-motion:reduce) { .gallery-slide.is-editing { animation:none; } }
     .legend { display:flex; flex-wrap:wrap; gap:7px; margin:8px 0 14px; }
     .badge { display:inline-flex; align-items:center; padding:3px 7px; border:2px solid var(--ink); border-radius:6px; font-size:.72rem; font-weight:950; }
     .badge.high { color:#fff; background:var(--red); }
@@ -662,6 +692,7 @@
     if (!confirm('确定清空所有勾选和备注？此操作无法撤销。')) return;
     Object.keys(localStorage).filter(key => key.startsWith(PREFIX)).forEach(key => localStorage.removeItem(key));
     savedInputs.forEach(el => { if (el.type === 'checkbox') el.checked = false; else el.value = ''; });
+    document.querySelectorAll('.step-note-input').forEach(el => { el.value = ''; el.closest('.step')?.querySelector('.step-note-toggle')?.classList.remove('has-note'); });
     updateProgress();
     saveStatus.textContent = '已清空。本页会继续自动保存新内容。';
   });
@@ -669,18 +700,18 @@
   const PHOTO_DB_NAME = 'uk-is-2026-media';
   const PHOTO_STORE = 'step-photos';
   const DEFAULT_PHOTO_STEPS = {
-    'uk0926-3': true,
-    'uk0927-6': true,
-    'uk0928-5': true,
-    'uk0929-5': true,
-    'is1001-1': true,
-    'is1002-4': true,
-    'is1003-3': true,
-    'is1004-5': true,
-    'is1005-2': true
+    'uk0926-3': true, 'uk0927-6': true, 'uk0928-5': true, 'uk0929-5': true,
+    'is1001-1': true, 'is1002-4': true, 'is1003-3': true, 'is1004-5': true, 'is1005-2': true
   };
   let photoDbPromise;
-  const customPhotoUrls = new Set();
+  const allObjectUrls = new Set();
+
+  function makeElement(tag, className, text) {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (text !== undefined) element.textContent = text;
+    return element;
+  }
 
   function openPhotoDb() {
     if (!photoDbPromise) {
@@ -698,67 +729,304 @@
     return photoDbPromise;
   }
 
-  async function readPhoto(key) {
+  function normalizePhotoRecord(record, key) {
+    if (!record) return { key:key, photos:[], hideDefault:false };
+    if (Array.isArray(record.photos)) return {
+      key:key,
+      hideDefault:!!record.hideDefault,
+      photos:record.photos.filter(photo => photo && photo.blob).map(photo => ({
+        id:photo.id || ('p-' + Date.now() + '-' + Math.random().toString(36).slice(2)),
+        blob:photo.blob,
+        name:photo.name || '照片',
+        updatedAt:photo.updatedAt || Date.now()
+      }))
+    };
+    if (record.blob) return {
+      key:key,
+      hideDefault:false,
+      photos:[{ id:'legacy-' + Date.now(), blob:record.blob, name:record.name || '照片', updatedAt:record.updatedAt || Date.now() }]
+    };
+    return { key:key, photos:[], hideDefault:!!record.hideDefault };
+  }
+
+  async function readPhotoRecord(key) {
     const db = await openPhotoDb();
-    return new Promise((resolve, reject) => {
+    const record = await new Promise((resolve, reject) => {
       const request = db.transaction(PHOTO_STORE, 'readonly').objectStore(PHOTO_STORE).get(key);
       request.onsuccess = () => resolve(request.result || null);
       request.onerror = () => reject(request.error);
     });
+    return normalizePhotoRecord(record, key);
   }
 
-  async function writePhoto(record) {
+  async function writePhotoRecord(record) {
     const db = await openPhotoDb();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(PHOTO_STORE, 'readwrite');
       tx.objectStore(PHOTO_STORE).put(record);
       tx.oncomplete = resolve;
-      tx.onerror = () => reject(tx.error);
+      tx.onerror = () => reject(tx.error || new Error('照片保存失败'));
     });
   }
 
-  async function deletePhoto(key) {
-    const db = await openPhotoDb();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(PHOTO_STORE, 'readwrite');
-      tx.objectStore(PHOTO_STORE).delete(key);
-      tx.oncomplete = resolve;
-      tx.onerror = () => reject(tx.error);
-    });
-  }
+  function createPhotoUi() {
+    const toast = makeElement('div', 'toast');
+    toast.hidden = true;
+    toast.setAttribute('role', 'status');
+    document.body.append(toast);
+    let toastTimer = 0;
+    function showToast(message) {
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.hidden = false;
+      toastTimer = setTimeout(() => { toast.hidden = true; }, 1900);
+    }
 
-  function compressPhoto(file) {
-    return new Promise((resolve, reject) => {
-      if (!file || !file.type.startsWith('image/')) return reject(new Error('请选择图片文件'));
-      if (file.size > 25 * 1024 * 1024) return reject(new Error('图片请小于 25MB'));
-      const sourceUrl = URL.createObjectURL(file);
-      const image = new Image();
-      image.onload = () => {
-        const maxSide = 1600;
-        const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
-        const width = Math.max(1, Math.round(image.naturalWidth * scale));
-        const height = Math.max(1, Math.round(image.naturalHeight * scale));
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(image, 0, 0, width, height);
-        URL.revokeObjectURL(sourceUrl);
-        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('图片处理失败')), 'image/jpeg', .84);
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.className = 'gallery-file-input';
+    fileInput.tabIndex = -1;
+    fileInput.setAttribute('aria-hidden', 'true');
+    document.body.append(fileInput);
+    let pendingCropHandler = null;
+
+    const cropLayer = makeElement('div', 'modal-layer');
+    cropLayer.hidden = true;
+    cropLayer.setAttribute('role', 'dialog');
+    cropLayer.setAttribute('aria-modal', 'true');
+    cropLayer.setAttribute('aria-label', '裁剪照片');
+    const cropCard = makeElement('div', 'modal-card');
+    const cropHead = makeElement('div', 'modal-head');
+    cropHead.append(makeElement('strong', '', '裁剪照片'));
+    const cropClose = makeElement('button', 'modal-close', '取消');
+    cropClose.type = 'button';
+    cropHead.append(cropClose);
+    const cropArea = makeElement('div', 'crop-area');
+    const cropFrame = makeElement('div', 'crop-frame');
+    const cropImage = document.createElement('img');
+    cropImage.className = 'crop-image';
+    cropImage.alt = '';
+    cropFrame.append(cropImage, makeElement('div', 'crop-grid'));
+    const cropControls = makeElement('label', 'crop-controls');
+    cropControls.append(makeElement('span', '', '缩放'));
+    const zoomRange = document.createElement('input');
+    zoomRange.type = 'range';
+    zoomRange.min = '1';
+    zoomRange.max = '3';
+    zoomRange.step = '.01';
+    zoomRange.value = '1';
+    cropControls.append(zoomRange);
+    cropArea.append(cropFrame, cropControls);
+    const cropFoot = makeElement('div', 'modal-foot');
+    cropFoot.append(makeElement('span', '', '拖动取景'));
+    const useCrop = makeElement('button', 'modal-btn primary', '使用照片');
+    useCrop.type = 'button';
+    cropFoot.append(useCrop);
+    cropCard.append(cropHead, cropArea, cropFoot);
+    cropLayer.append(cropCard);
+    document.body.append(cropLayer);
+
+    let cropState = null;
+    let cropSourceUrl = '';
+    function closeCropper() {
+      cropLayer.hidden = true;
+      document.body.classList.remove('modal-open');
+      if (cropSourceUrl) URL.revokeObjectURL(cropSourceUrl);
+      cropSourceUrl = '';
+      cropState = null;
+      pendingCropHandler = null;
+      fileInput.value = '';
+    }
+
+    function clampCrop() {
+      if (!cropState) return;
+      const rect = cropFrame.getBoundingClientRect();
+      const maxX = Math.max(0, (cropState.baseWidth * cropState.zoom - rect.width) / 2);
+      const maxY = Math.max(0, (cropState.baseHeight * cropState.zoom - rect.height) / 2);
+      cropState.x = Math.max(-maxX, Math.min(maxX, cropState.x));
+      cropState.y = Math.max(-maxY, Math.min(maxY, cropState.y));
+      cropImage.style.transform = 'translate(calc(-50% + ' + cropState.x + 'px),calc(-50% + ' + cropState.y + 'px)) scale(' + cropState.zoom + ')';
+    }
+
+    function openCropper(file, handler) {
+      if (!file || !file.type.startsWith('image/')) return showToast('请选择图片文件');
+      if (file.size > 25 * 1024 * 1024) return showToast('图片请小于 25MB');
+      pendingCropHandler = handler;
+      cropSourceUrl = URL.createObjectURL(file);
+      cropImage.onload = () => {
+        cropLayer.hidden = false;
+        document.body.classList.add('modal-open');
+        requestAnimationFrame(() => {
+          const rect = cropFrame.getBoundingClientRect();
+          const baseScale = Math.max(rect.width / cropImage.naturalWidth, rect.height / cropImage.naturalHeight);
+          cropState = {
+            naturalWidth:cropImage.naturalWidth,
+            naturalHeight:cropImage.naturalHeight,
+            baseScale:baseScale,
+            baseWidth:cropImage.naturalWidth * baseScale,
+            baseHeight:cropImage.naturalHeight * baseScale,
+            zoom:1, x:0, y:0
+          };
+          cropImage.style.width = cropState.baseWidth + 'px';
+          cropImage.style.height = cropState.baseHeight + 'px';
+          zoomRange.value = '1';
+          clampCrop();
+        });
       };
-      image.onerror = () => {
-        URL.revokeObjectURL(sourceUrl);
-        reject(new Error('这张图片无法读取，请换一张'));
-      };
-      image.src = sourceUrl;
+      cropImage.onerror = () => { closeCropper(); showToast('这张图片无法读取'); };
+      cropImage.src = cropSourceUrl;
+    }
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files?.[0];
+      if (file && pendingCropHandler) openCropper(file, pendingCropHandler);
     });
+
+    function choosePhoto(handler) {
+      pendingCropHandler = handler;
+      fileInput.value = '';
+      fileInput.click();
+    }
+
+    let drag = null;
+    cropFrame.addEventListener('pointerdown', event => {
+      if (!cropState) return;
+      drag = { startX:event.clientX, startY:event.clientY, x:cropState.x, y:cropState.y };
+      cropFrame.setPointerCapture(event.pointerId);
+    });
+    cropFrame.addEventListener('pointermove', event => {
+      if (!drag || !cropState) return;
+      cropState.x = drag.x + event.clientX - drag.startX;
+      cropState.y = drag.y + event.clientY - drag.startY;
+      clampCrop();
+    });
+    cropFrame.addEventListener('pointerup', () => { drag = null; });
+    cropFrame.addEventListener('pointercancel', () => { drag = null; });
+    zoomRange.addEventListener('input', () => {
+      if (!cropState) return;
+      cropState.zoom = Number(zoomRange.value);
+      clampCrop();
+    });
+    cropClose.addEventListener('click', closeCropper);
+
+    useCrop.addEventListener('click', () => {
+      if (!cropState || !pendingCropHandler) return;
+      const handler = pendingCropHandler;
+      const rect = cropFrame.getBoundingClientRect();
+      const scale = cropState.baseScale * cropState.zoom;
+      const sourceWidth = rect.width / scale;
+      const sourceHeight = rect.height / scale;
+      let sourceX = cropState.naturalWidth / 2 - sourceWidth / 2 - cropState.x / scale;
+      let sourceY = cropState.naturalHeight / 2 - sourceHeight / 2 - cropState.y / scale;
+      sourceX = Math.max(0, Math.min(cropState.naturalWidth - sourceWidth, sourceX));
+      sourceY = Math.max(0, Math.min(cropState.naturalHeight - sourceHeight, sourceY));
+      const outputWidth = Math.max(640, Math.min(1440, Math.round(sourceWidth)));
+      const outputHeight = Math.round(outputWidth * 9 / 16);
+      const canvas = document.createElement('canvas');
+      canvas.width = outputWidth;
+      canvas.height = outputHeight;
+      canvas.getContext('2d').drawImage(cropImage, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputWidth, outputHeight);
+      useCrop.disabled = true;
+      canvas.toBlob(blob => {
+        useCrop.disabled = false;
+        if (!blob) return showToast('照片处理失败');
+        closeCropper();
+        handler(blob);
+      }, 'image/jpeg', .84);
+    });
+
+    const lightbox = makeElement('div', 'modal-layer');
+    lightbox.hidden = true;
+    lightbox.setAttribute('role', 'dialog');
+    lightbox.setAttribute('aria-modal', 'true');
+    lightbox.setAttribute('aria-label', '查看大图');
+    const lightboxCard = makeElement('div', 'lightbox-card');
+    const lightboxWrap = makeElement('div', 'lightbox-image-wrap');
+    const lightboxImage = document.createElement('img');
+    lightboxImage.className = 'lightbox-image';
+    lightboxWrap.append(lightboxImage);
+    const lightboxBar = makeElement('div', 'lightbox-bar');
+    const lightboxPrev = makeElement('button', 'modal-close', '←');
+    lightboxPrev.type = 'button';
+    const lightboxTitle = makeElement('span', 'lightbox-title');
+    const lightboxNext = makeElement('button', 'modal-close', '→');
+    lightboxNext.type = 'button';
+    const lightboxClose = makeElement('button', 'modal-close', '关闭');
+    lightboxClose.type = 'button';
+    lightboxBar.append(lightboxPrev, lightboxTitle, lightboxNext, lightboxClose);
+    lightboxCard.append(lightboxWrap, lightboxBar);
+    lightbox.append(lightboxCard);
+    document.body.append(lightbox);
+    let lightboxState = { items:[], index:0, title:'' };
+
+    function renderLightbox() {
+      const item = lightboxState.items[lightboxState.index];
+      if (!item) return;
+      lightboxImage.src = item.src;
+      lightboxImage.alt = lightboxState.title;
+      lightboxTitle.textContent = lightboxState.title + ' · ' + (lightboxState.index + 1) + '/' + lightboxState.items.length;
+      lightboxPrev.disabled = lightboxState.items.length < 2;
+      lightboxNext.disabled = lightboxState.items.length < 2;
+    }
+    function openLightbox(items, index, title) {
+      lightboxState = { items:items, index:index, title:title };
+      renderLightbox();
+      lightbox.hidden = false;
+      document.body.classList.add('modal-open');
+    }
+    function closeLightbox() {
+      lightbox.hidden = true;
+      document.body.classList.remove('modal-open');
+    }
+    lightboxPrev.addEventListener('click', () => { lightboxState.index = (lightboxState.index - 1 + lightboxState.items.length) % lightboxState.items.length; renderLightbox(); });
+    lightboxNext.addEventListener('click', () => { lightboxState.index = (lightboxState.index + 1) % lightboxState.items.length; renderLightbox(); });
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', event => { if (event.target === lightbox) closeLightbox(); });
+    document.addEventListener('keydown', event => {
+      if (!cropLayer.hidden && event.key === 'Escape') closeCropper();
+      if (lightbox.hidden) return;
+      if (event.key === 'Escape') closeLightbox();
+      if (event.key === 'ArrowLeft') lightboxPrev.click();
+      if (event.key === 'ArrowRight') lightboxNext.click();
+    });
+
+    return { choosePhoto:choosePhoto, openLightbox:openLightbox, showToast:showToast };
   }
 
-  function makeElement(tag, className, text) {
-    const element = document.createElement(tag);
-    if (className) element.className = className;
-    if (text !== undefined) element.textContent = text;
-    return element;
+  const photoUi = createPhotoUi();
+
+  function addStepNote(step, stepKey) {
+    const content = step.children[2];
+    if (!content || content.querySelector('.step-note-row')) return;
+    const noteKey = PREFIX + 'step-note:' + stepKey;
+    const row = makeElement('div', 'step-note-row');
+    const toggle = makeElement('button', 'step-note-toggle', '📎');
+    toggle.type = 'button';
+    toggle.setAttribute('aria-label', '展开行程备注');
+    toggle.setAttribute('aria-expanded', 'false');
+    const drawer = makeElement('div', 'step-note-drawer');
+    drawer.hidden = true;
+    const textarea = document.createElement('textarea');
+    textarea.className = 'step-note-input';
+    textarea.placeholder = '补充集合点、预订号或临时安排……';
+    textarea.value = localStorage.getItem(noteKey) || '';
+    toggle.classList.toggle('has-note', !!textarea.value.trim());
+    drawer.append(textarea);
+    row.append(toggle);
+    content.append(row, drawer);
+    toggle.addEventListener('click', event => {
+      event.stopPropagation();
+      drawer.hidden = !drawer.hidden;
+      toggle.setAttribute('aria-expanded', drawer.hidden ? 'false' : 'true');
+      toggle.setAttribute('aria-label', drawer.hidden ? '展开行程备注' : '收起行程备注');
+      if (!drawer.hidden) textarea.focus();
+    });
+    textarea.addEventListener('click', event => event.stopPropagation());
+    textarea.addEventListener('input', () => {
+      localStorage.setItem(noteKey, textarea.value);
+      toggle.classList.toggle('has-note', !!textarea.value.trim());
+    });
   }
 
   function initPhotoGalleries() {
@@ -774,159 +1042,47 @@
         const seedImage = seedFigure.querySelector('img');
         const seedCredit = seedFigure.querySelector('.photo-credit');
         seed = seedImage ? {
-          src: seedImage.src,
-          alt: seedImage.alt,
-          credit: seedCredit ? seedCredit.textContent.trim() : '',
-          creditHref: seedCredit ? seedCredit.href : ''
+          src:seedImage.src,
+          alt:seedImage.alt,
+          credit:seedCredit ? seedCredit.textContent.trim() : '',
+          creditHref:seedCredit ? seedCredit.href : ''
         } : null;
         seedKey = steps.map(step => step.querySelector('[data-save]')?.dataset.save || '').find(key => DEFAULT_PHOTO_STEPS[key]) || '';
         seedFigure.remove();
       }
 
-      const gallery = makeElement('section', 'step-gallery');
-      gallery.setAttribute('aria-label', '当日行程照片');
-      gallery.setAttribute('aria-roledescription', '照片轮播');
-      gallery.style.scrollMarginTop = '112px';
-
-      const head = makeElement('div', 'gallery-head');
-      const heading = makeElement('div');
-      heading.append(makeElement('span', 'gallery-kicker', '行程照片 · 左右滑动'));
-      const activeTitle = makeElement('strong', 'gallery-title', '');
-      heading.append(activeTitle);
-      const counter = makeElement('span', 'gallery-counter', '1 / ' + steps.length);
-      head.append(heading, counter);
-
-      const track = makeElement('div', 'gallery-track');
-      track.tabIndex = 0;
-      track.setAttribute('aria-label', '左右滑动查看每条行程对应照片');
-      const slideStates = [];
-
-      steps.forEach((step, index) => {
+      const stepStates = steps.map((step, index) => {
         const checkbox = step.querySelector('input[data-save]');
-        const key = checkbox ? checkbox.dataset.save : 'day-' + dayIndex + '-step-' + index;
-        const timeText = step.querySelector('time')?.textContent.trim() || '行程';
-        const titleText = step.querySelector('b')?.textContent.trim() || ('第 ' + (index + 1) + ' 项');
-        const slide = makeElement('article', 'gallery-slide');
-        slide.setAttribute('aria-label', (index + 1) + ' / ' + steps.length + '：' + titleText);
-        slide.dataset.index = String(index);
-
-        const visual = makeElement('div', 'gallery-visual');
-        const empty = makeElement('div', 'gallery-empty');
-        empty.append(makeElement('b', '', '为“' + titleText + '”添加照片'), makeElement('span', '', '从相册选择，照片只保存在当前浏览器'));
-        visual.append(empty);
-
-        const actions = makeElement('div', 'gallery-actions');
-        const upload = makeElement('label', 'gallery-upload', '＋ 添加照片');
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.setAttribute('aria-label', '为' + titleText + '添加或更换照片');
-        upload.append(input);
-        const remove = makeElement('button', 'gallery-remove', '移除');
-        remove.type = 'button';
-        actions.append(upload, remove);
-        slide.append(visual, actions);
-
-        const meta = makeElement('div', 'gallery-meta');
-        meta.append(makeElement('time', 'gallery-time', timeText));
-        const copy = makeElement('div', 'gallery-copy');
-        copy.append(makeElement('b', '', titleText));
-        const source = makeElement('span', 'gallery-source', '等待添加照片');
-        copy.append(source);
-        meta.append(copy);
-        slide.append(meta);
-        track.append(slide);
-
+        const shortKey = checkbox ? checkbox.dataset.save : 'day-' + dayIndex + '-step-' + index;
+        const key = PREFIX + 'photo:' + shortKey;
         const state = {
-          key: PREFIX + 'photo:' + key,
-          slide, visual, source, upload, remove, input,
-          title: titleText,
-          defaultPhoto: key === seedKey ? seed : null,
-          objectUrl: ''
+          step:step,
+          index:index,
+          shortKey:shortKey,
+          key:key,
+          title:step.querySelector('b')?.textContent.trim() || ('第 ' + (index + 1) + ' 项'),
+          time:step.querySelector('time')?.textContent.trim() || '',
+          defaultPhoto:shortKey === seedKey ? seed : null,
+          record:normalizePhotoRecord(null, key)
         };
-        slideStates.push(state);
-
-        function clearCurrentImage() {
-          const oldImage = visual.querySelector('img');
-          if (oldImage) oldImage.remove();
-          if (state.objectUrl) {
-            URL.revokeObjectURL(state.objectUrl);
-            customPhotoUrls.delete(state.objectUrl);
-            state.objectUrl = '';
-          }
-          slide.classList.remove('has-photo', 'has-custom');
-          remove.style.display = '';
-        }
-
-        function showDefaultPhoto() {
-          clearCurrentImage();
-          if (!state.defaultPhoto) {
-            source.textContent = '等待添加照片';
-            upload.firstChild.textContent = '＋ 添加照片';
-            return;
-          }
-          const img = document.createElement('img');
-          img.src = state.defaultPhoto.src;
-          img.alt = state.defaultPhoto.alt || titleText;
-          visual.prepend(img);
-          slide.classList.add('has-photo');
-          upload.firstChild.textContent = '更换照片';
-          source.textContent = '';
-          if (state.defaultPhoto.creditHref) {
-            const credit = makeElement('a', '', state.defaultPhoto.credit || '图片来源');
-            credit.href = state.defaultPhoto.creditHref;
-            credit.target = '_blank';
-            credit.rel = 'noopener';
-            source.append('默认照片 · ', credit);
-          } else source.textContent = state.defaultPhoto.credit || '默认照片';
-        }
-
-        function showCustomPhoto(record) {
-          clearCurrentImage();
-          state.objectUrl = URL.createObjectURL(record.blob);
-          customPhotoUrls.add(state.objectUrl);
-          const img = document.createElement('img');
-          img.src = state.objectUrl;
-          img.alt = titleText + '的自定义照片';
-          visual.prepend(img);
-          slide.classList.add('has-photo', 'has-custom');
-          upload.firstChild.textContent = '更换照片';
-          source.textContent = '我的照片 · 仅存当前浏览器';
-        }
-
-        showDefaultPhoto();
-        readPhoto(state.key).then(record => { if (record?.blob) showCustomPhoto(record); }).catch(() => {});
-
-        input.addEventListener('change', async () => {
-          const file = input.files?.[0];
-          if (!file) return;
-          upload.firstChild.textContent = '处理中…';
-          try {
-            const blob = await compressPhoto(file);
-            const record = { key:state.key, blob, name:file.name, updatedAt:Date.now() };
-            await writePhoto(record);
-            showCustomPhoto(record);
-            status.textContent = '“' + titleText + '”照片已保存到当前浏览器。';
-          } catch (error) {
-            status.textContent = error?.message || '照片添加失败，请重试。';
-            showDefaultPhoto();
-          } finally {
-            input.value = '';
-          }
-        });
-
-        remove.addEventListener('click', async () => {
-          if (!confirm('移除“' + titleText + '”的自定义照片？')) return;
-          try {
-            await deletePhoto(state.key);
-            showDefaultPhoto();
-            status.textContent = '自定义照片已移除。';
-          } catch {
-            status.textContent = '照片暂时无法移除，请稍后重试。';
-          }
-        });
+        addStepNote(step, shortKey);
+        return state;
       });
 
+      const gallery = makeElement('section', 'step-gallery');
+      gallery.setAttribute('aria-label', '当日照片');
+      gallery.setAttribute('aria-roledescription', '照片轮播');
+      const head = makeElement('div', 'gallery-head');
+      const activeTitle = makeElement('strong', 'gallery-title');
+      const headActions = makeElement('div', 'gallery-head-actions');
+      const counter = makeElement('span', 'gallery-counter');
+      const done = makeElement('button', 'gallery-done', '完成');
+      done.type = 'button';
+      headActions.append(counter, done);
+      head.append(activeTitle, headActions);
+      const track = makeElement('div', 'gallery-track');
+      track.tabIndex = 0;
+      track.setAttribute('aria-label', '左右滑动照片');
       const nav = makeElement('div', 'gallery-nav');
       const prev = makeElement('button', 'gallery-arrow', '←');
       prev.type = 'button';
@@ -935,93 +1091,293 @@
       const next = makeElement('button', 'gallery-arrow', '→');
       next.type = 'button';
       next.setAttribute('aria-label', '下一张照片');
-      const dotButtons = steps.map((step, index) => {
-        const dot = makeElement('button', 'gallery-dot', String(index + 1));
-        dot.type = 'button';
-        dot.setAttribute('aria-label', '查看第 ' + (index + 1) + ' 条行程照片');
-        dots.append(dot);
-        return dot;
-      });
       nav.append(prev, dots, next);
-      const hint = makeElement('p', 'gallery-hint', '滑动照片会高亮下方步骤；点步骤文字会回到对应照片。');
-      const status = makeElement('p', 'gallery-status', '');
-      status.setAttribute('aria-live', 'polite');
-      gallery.append(head, track, nav, hint, status);
+      gallery.append(head, track, nav);
       stepsList.before(gallery);
 
-      let activeIndex = Math.max(0, slideStates.findIndex(item => item.defaultPhoto));
-      let scrollFrame = 0;
+      const galleryState = { activeIndex:0, items:[], slides:[], objectUrls:new Set(), editingKey:'', scrollFrame:0 };
 
-      function updateActive(index) {
-        activeIndex = Math.max(0, Math.min(index, slideStates.length - 1));
-        slideStates.forEach((state, slideIndex) => {
-          const active = slideIndex === activeIndex;
-          state.slide.classList.toggle('is-active', active);
-          state.slide.setAttribute('aria-current', active ? 'true' : 'false');
-          steps[slideIndex].classList.toggle('photo-active', active);
-          dotButtons[slideIndex].classList.toggle('is-active', active);
-          dotButtons[slideIndex].setAttribute('aria-current', active ? 'true' : 'false');
-        });
-        const activeStep = steps[activeIndex];
-        activeTitle.textContent = activeStep.querySelector('time')?.textContent.trim() + ' · ' + (activeStep.querySelector('b')?.textContent.trim() || '行程');
-        counter.textContent = (activeIndex + 1) + ' / ' + steps.length;
-        dotButtons[activeIndex].scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' });
+      function revokeGalleryUrls() {
+        galleryState.objectUrls.forEach(url => { URL.revokeObjectURL(url); allObjectUrls.delete(url); });
+        galleryState.objectUrls.clear();
       }
 
-      function moveTo(index, revealGallery) {
-        const targetIndex = Math.max(0, Math.min(index, slideStates.length - 1));
-        updateActive(targetIndex);
-        const slide = slideStates[targetIndex].slide;
-        const left = slide.offsetLeft - (track.clientWidth - slide.offsetWidth) / 2;
-        track.scrollTo({ left, behavior:'smooth' });
-        if (revealGallery) gallery.scrollIntoView({ behavior:'smooth', block:'start' });
+      function flattenItems() {
+        const result = [];
+        stepStates.forEach(stepState => {
+          const photos = [];
+          if (stepState.defaultPhoto && !stepState.record.hideDefault) photos.push({
+            id:'default', kind:'default', src:stepState.defaultPhoto.src, alt:stepState.defaultPhoto.alt,
+            credit:stepState.defaultPhoto.credit, creditHref:stepState.defaultPhoto.creditHref
+          });
+          stepState.record.photos.forEach(photo => photos.push({ id:photo.id, kind:'custom', blob:photo.blob, alt:stepState.title }));
+          if (!photos.length) photos.push({ id:'empty', kind:'empty', src:'', alt:'' });
+          photos.forEach((photo, photoIndex) => result.push({ stepState:stepState, photo:photo, photoIndex:photoIndex, locationCount:photos.length }));
+        });
+        return result;
+      }
+
+      function exitEditing() {
+        galleryState.editingKey = '';
+        gallery.classList.remove('is-editing');
+        galleryState.slides.forEach(slide => slide.classList.remove('is-editing'));
+      }
+
+      function enterEditing(stepKey) {
+        galleryState.editingKey = stepKey;
+        gallery.classList.add('is-editing');
+        galleryState.slides.forEach(slide => slide.classList.toggle('is-editing', slide.dataset.stepKey === stepKey));
+      }
+
+      function saveCroppedPhoto(stepState, mode, photoId, blob) {
+        let keepId = photoId;
+        if (mode === 'add' || (mode === 'replace' && photoId === 'default')) {
+          keepId = 'p-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+          const item = { id:keepId, blob:blob, name:'照片', updatedAt:Date.now() };
+          if (mode === 'replace' && photoId === 'default') {
+            stepState.record.hideDefault = true;
+            stepState.record.photos.unshift(item);
+          } else stepState.record.photos.push(item);
+        } else {
+          const target = stepState.record.photos.find(photo => photo.id === photoId);
+          if (target) { target.blob = blob; target.updatedAt = Date.now(); }
+        }
+        writePhotoRecord(stepState.record).then(() => {
+          renderGallery(stepState.shortKey, keepId);
+          enterEditing(stepState.shortKey);
+          photoUi.showToast('照片已保存');
+        }).catch(() => photoUi.showToast('照片保存失败，请重试'));
+      }
+
+      function chooseFor(stepState, mode, photoId) {
+        photoUi.choosePhoto(blob => saveCroppedPhoto(stepState, mode, photoId, blob));
+      }
+
+      function removeCustom(stepState, photoId) {
+        if (!confirm('移除这张照片？')) return;
+        stepState.record.photos = stepState.record.photos.filter(photo => photo.id !== photoId);
+        if (!stepState.record.photos.length && stepState.defaultPhoto) stepState.record.hideDefault = false;
+        writePhotoRecord(stepState.record).then(() => {
+          renderGallery(stepState.shortKey, '');
+          enterEditing(stepState.shortKey);
+          photoUi.showToast('照片已移除');
+        }).catch(() => photoUi.showToast('暂时无法移除'));
+      }
+
+      function openItemLightbox(item) {
+        const sameLocation = galleryState.items.filter(candidate => candidate.stepState.shortKey === item.stepState.shortKey && candidate.photo.kind !== 'empty');
+        const index = Math.max(0, sameLocation.findIndex(candidate => candidate.photo.id === item.photo.id));
+        photoUi.openLightbox(sameLocation.map(candidate => ({ src:candidate.photo.src })), index, item.stepState.title);
+      }
+
+      function bindLongPress(slide, item) {
+        let timer = 0;
+        let startX = 0;
+        let startY = 0;
+        let longPressed = false;
+        let moved = false;
+        function cancelPress() {
+          clearTimeout(timer);
+          timer = 0;
+          slide.classList.remove('is-pressing');
+        }
+        slide.addEventListener('pointerdown', event => {
+          if (event.target.closest('button')) return;
+          startX = event.clientX;
+          startY = event.clientY;
+          longPressed = false;
+          moved = false;
+          slide.classList.add('is-pressing');
+          timer = setTimeout(() => {
+            longPressed = true;
+            slide.classList.remove('is-pressing');
+            enterEditing(item.stepState.shortKey);
+            if (navigator.vibrate) navigator.vibrate(28);
+          }, 520);
+        });
+        slide.addEventListener('pointermove', event => {
+          if (Math.abs(event.clientX - startX) > 9 || Math.abs(event.clientY - startY) > 9) { moved = true; cancelPress(); }
+        });
+        slide.addEventListener('pointercancel', cancelPress);
+        slide.addEventListener('pointerup', event => {
+          const wasLong = longPressed;
+          cancelPress();
+          if (!wasLong && !moved && !galleryState.editingKey && item.photo.kind !== 'empty' && !event.target.closest('button')) openItemLightbox(item);
+        });
+        slide.addEventListener('contextmenu', event => event.preventDefault());
+      }
+
+      function renderGallery(preferredStepKey, preferredPhotoId) {
+        const oldItem = galleryState.items[galleryState.activeIndex];
+        const hasPreferredTarget = !!preferredStepKey || !!oldItem;
+        const targetStep = preferredStepKey || oldItem?.stepState.shortKey || stepStates[0].shortKey;
+        const targetPhoto = preferredPhotoId || oldItem?.photo.id || '';
+        revokeGalleryUrls();
+        track.replaceChildren();
+        dots.replaceChildren();
+        galleryState.items = flattenItems();
+        galleryState.slides = [];
+
+        galleryState.items.forEach((item, index) => {
+          if (item.photo.kind === 'custom') {
+            item.photo.src = URL.createObjectURL(item.photo.blob);
+            galleryState.objectUrls.add(item.photo.src);
+            allObjectUrls.add(item.photo.src);
+          }
+          const slide = makeElement('article', 'gallery-slide');
+          slide.tabIndex = 0;
+          slide.dataset.stepKey = item.stepState.shortKey;
+          slide.dataset.photoId = item.photo.id;
+          slide.setAttribute('aria-label', (index + 1) + ' / ' + galleryState.items.length + '：' + item.stepState.title);
+          if (item.photo.kind !== 'empty') slide.classList.add('has-photo');
+          const visual = makeElement('div', 'gallery-visual');
+          if (item.photo.kind === 'empty') visual.append(makeElement('span', 'gallery-empty', '＋'));
+          else {
+            const image = document.createElement('img');
+            image.src = item.photo.src;
+            image.alt = item.photo.alt || item.stepState.title;
+            visual.append(image);
+          }
+          const actions = makeElement('div', 'gallery-actions');
+          const add = makeElement('button', 'gallery-action', '＋');
+          add.type = 'button';
+          add.title = '添加照片';
+          add.setAttribute('aria-label', '为' + item.stepState.title + '添加照片');
+          add.addEventListener('click', () => chooseFor(item.stepState, 'add', ''));
+          actions.append(add);
+          if (item.photo.kind !== 'empty') {
+            const replace = makeElement('button', 'gallery-action', '↻');
+            replace.type = 'button';
+            replace.title = '更换照片';
+            replace.setAttribute('aria-label', '更换这张照片');
+            replace.addEventListener('click', () => chooseFor(item.stepState, 'replace', item.photo.id));
+            actions.append(replace);
+          }
+          if (item.photo.kind === 'custom') {
+            const remove = makeElement('button', 'gallery-action delete', '－');
+            remove.type = 'button';
+            remove.title = '移除照片';
+            remove.setAttribute('aria-label', '移除这张照片');
+            remove.addEventListener('click', () => removeCustom(item.stepState, item.photo.id));
+            actions.append(remove);
+          }
+          slide.append(visual, actions);
+          const meta = makeElement('div', 'gallery-meta');
+          meta.append(makeElement('time', 'gallery-time', item.stepState.time));
+          const copy = makeElement('div', 'gallery-copy');
+          copy.append(makeElement('b', '', item.stepState.title));
+          meta.append(copy);
+          slide.append(meta);
+          bindLongPress(slide, item);
+          slide.addEventListener('dblclick', event => {
+            if (event.target.closest('button')) return;
+            enterEditing(item.stepState.shortKey);
+          });
+          slide.addEventListener('keydown', event => {
+            if (event.key !== 'Enter' || !event.shiftKey) return;
+            event.preventDefault();
+            enterEditing(item.stepState.shortKey);
+          });
+          track.append(slide);
+          galleryState.slides.push(slide);
+
+          const dot = makeElement('button', 'gallery-dot', String(index + 1));
+          dot.type = 'button';
+          dot.setAttribute('aria-label', '查看第 ' + (index + 1) + ' 张照片');
+          dot.addEventListener('click', () => moveTo(index));
+          dots.append(dot);
+        });
+
+        let nextIndex = hasPreferredTarget ? galleryState.items.findIndex(item => item.stepState.shortKey === targetStep && item.photo.id === targetPhoto) : -1;
+        if (nextIndex < 0 && hasPreferredTarget) nextIndex = galleryState.items.findIndex(item => item.stepState.shortKey === targetStep);
+        if (nextIndex < 0) nextIndex = Math.max(0, galleryState.items.findIndex(item => item.photo.kind !== 'empty'));
+        galleryState.activeIndex = nextIndex;
+        updateActive(nextIndex);
+        requestAnimationFrame(() => alignSlide(nextIndex, 'auto'));
+      }
+
+      function alignSlide(index, behavior) {
+        const slide = galleryState.slides[index];
+        if (!slide || !track.clientWidth) return;
+        track.scrollTo({ left:slide.offsetLeft - (track.clientWidth - slide.offsetWidth) / 2, behavior:behavior || 'smooth' });
+      }
+
+      function updateActive(index) {
+        galleryState.activeIndex = Math.max(0, Math.min(index, galleryState.items.length - 1));
+        const activeItem = galleryState.items[galleryState.activeIndex];
+        galleryState.slides.forEach((slide, slideIndex) => {
+          const active = slideIndex === galleryState.activeIndex;
+          slide.classList.toggle('is-active', active);
+          slide.setAttribute('aria-current', active ? 'true' : 'false');
+        });
+        [...dots.children].forEach((dot, dotIndex) => {
+          const active = dotIndex === galleryState.activeIndex;
+          dot.classList.toggle('is-active', active);
+          dot.setAttribute('aria-current', active ? 'true' : 'false');
+        });
+        stepStates.forEach(stepState => stepState.step.classList.toggle('photo-active', stepState.shortKey === activeItem.stepState.shortKey));
+        activeTitle.textContent = activeItem.stepState.time + ' · ' + activeItem.stepState.title;
+        counter.textContent = (galleryState.activeIndex + 1) + '/' + galleryState.items.length;
+        dots.children[galleryState.activeIndex]?.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' });
+      }
+
+      function moveTo(index) {
+        const target = Math.max(0, Math.min(index, galleryState.items.length - 1));
+        updateActive(target);
+        alignSlide(target, 'smooth');
+      }
+
+      function moveToStep(stepKey) {
+        const index = galleryState.items.findIndex(item => item.stepState.shortKey === stepKey);
+        if (index >= 0) moveTo(index);
       }
 
       track.addEventListener('scroll', () => {
-        cancelAnimationFrame(scrollFrame);
-        scrollFrame = requestAnimationFrame(() => {
+        cancelAnimationFrame(galleryState.scrollFrame);
+        galleryState.scrollFrame = requestAnimationFrame(() => {
           const center = track.scrollLeft + track.clientWidth / 2;
           let nearest = 0;
           let distance = Infinity;
-          slideStates.forEach((state, index) => {
-            const slideCenter = state.slide.offsetLeft + state.slide.offsetWidth / 2;
-            const currentDistance = Math.abs(slideCenter - center);
-            if (currentDistance < distance) { distance = currentDistance; nearest = index; }
+          galleryState.slides.forEach((slide, index) => {
+            const current = Math.abs(slide.offsetLeft + slide.offsetWidth / 2 - center);
+            if (current < distance) { distance = current; nearest = index; }
           });
-          if (nearest !== activeIndex) updateActive(nearest);
+          if (nearest !== galleryState.activeIndex) updateActive(nearest);
         });
       }, { passive:true });
+      prev.addEventListener('click', () => moveTo(galleryState.activeIndex - 1));
+      next.addEventListener('click', () => moveTo(galleryState.activeIndex + 1));
+      done.addEventListener('click', exitEditing);
+      document.addEventListener('pointerdown', event => {
+        if (galleryState.editingKey && !gallery.contains(event.target)) exitEditing();
+      });
 
-      prev.addEventListener('click', () => moveTo(activeIndex - 1, false));
-      next.addEventListener('click', () => moveTo(activeIndex + 1, false));
-      dotButtons.forEach((dot, index) => dot.addEventListener('click', () => moveTo(index, false)));
-      steps.forEach((step, index) => {
-        step.title = '点击查看对应照片';
-        step.addEventListener('click', event => {
+      stepStates.forEach(stepState => {
+        stepState.step.addEventListener('click', event => {
           if (event.target.closest('input,a,button,label,textarea')) return;
-          moveTo(index, true);
+          moveToStep(stepState.shortKey);
         });
       });
 
-      updateActive(activeIndex);
-      requestAnimationFrame(() => {
-        const activeSlide = slideStates[activeIndex].slide;
-        track.scrollLeft = activeSlide.offsetLeft - (track.clientWidth - activeSlide.offsetWidth) / 2;
+      renderGallery('', '');
+      Promise.all(stepStates.map(stepState => readPhotoRecord(stepState.key).catch(() => stepState.record))).then(records => {
+        records.forEach((record, index) => { stepStates[index].record = record; });
+        renderGallery(galleryState.items[galleryState.activeIndex]?.stepState.shortKey || '', galleryState.items[galleryState.activeIndex]?.photo.id || '');
       });
+
       if ('ResizeObserver' in window) {
         let previousWidth = 0;
         new ResizeObserver(() => {
           if (!track.clientWidth || track.clientWidth === previousWidth) return;
           previousWidth = track.clientWidth;
-          const activeSlide = slideStates[activeIndex].slide;
-          track.scrollLeft = activeSlide.offsetLeft - (track.clientWidth - activeSlide.offsetWidth) / 2;
+          alignSlide(galleryState.activeIndex, 'auto');
         }).observe(track);
       }
     });
   }
 
   initPhotoGalleries();
-  window.addEventListener('beforeunload', () => customPhotoUrls.forEach(url => URL.revokeObjectURL(url)));
+  window.addEventListener('beforeunload', () => allObjectUrls.forEach(url => URL.revokeObjectURL(url)));
 
   const lastTab = localStorage.getItem(PREFIX + 'active-tab');
   if (lastTab && document.getElementById(lastTab)) activateTab(lastTab, false);
