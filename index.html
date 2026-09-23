@@ -348,11 +348,11 @@
       <h2 class="section-title">住宿导航</h2>
       <div class="lodging">
         <a target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&amp;destination=7+Cabbell+Street+London+NW1+5BE"><b>伦敦｜9/25 - 9/30</b><span>7 Cabbell Street, Greater London, England NW1 5BE</span></a>
-        <a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&amp;query=Hamrabrekkur+15+271+Mosfellsbaer"><b>Mosfellsbær｜9/30 - 10/2</b><span>Hamrabrekkur 15, 271 Mosfellsbær · Oak House Villa</span></a>
+        <a target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&amp;destination=Hamrabrekkur+15+271+Mosfellsbaer+Iceland"><b>Mosfellsbær｜9/30 - 10/2</b><span>Hamrabrekkur 15, 271 Mosfellsbær, Iceland · Oak House Villa</span></a>
         <a target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&amp;destination=Hnappavellir+785+Oraefi+Iceland"><b>冰河湖酒店｜10/2（3人）</b><span>Fosshotel Glacier Lagoon · Hnappavellir, 785 Öræfi, Iceland</span></a>
         <a target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&amp;destination=Skaftafell+3C+785+Oraefi+Iceland"><b>斯卡夫塔山小屋｜10/2（4人）</b><span>Skaftafell Lodges · Skaftafell 3C, 785 Öræfi, Iceland</span></a>
         <a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&amp;query=63.887833%2C-20.519528"><b>Hella｜10/3</b><span>Álfasteinn / Elf Stone Country Home · 精确坐标 63.887833, -20.519528</span></a>
-        <a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&amp;query=Posthusstraeti+13+Reykjavik"><b>雷克雅未克｜10/4 - 10/6</b><span>Pósthússtræti 13, Reykjavík 101</span></a>
+        <a target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&amp;destination=Posthusstraeti+13+Reykjavik+Iceland"><b>雷克雅未克｜10/4 - 10/6</b><span>Pósthússtræti 13, Reykjavík 101, Iceland</span></a>
         <div class="lodging-pending"><b>Egham / Surrey｜10/6 - 10/7</b><span>签证行程表未列门牌；请从 Airbnb 订单复制精确地址后再导航</span></div>
       </div>
       <div id="roomAssignment"></div>
@@ -684,6 +684,7 @@
       </div>
 
       <h2 class="section-title">数据管理</h2>
+      <p class="intro">📱 照片保存在浏览器的 IndexedDB，并主动申请持久存储。iPhone 请使用 Safari 普通模式并添加到主屏幕；微信内浏览器可能随系统清理缓存，重要照片仍请保留在系统相册。</p>
       <button type="button" class="reset" id="resetBtn">清空本页全部勾选与备注</button>
     </section>
 
@@ -1079,6 +1080,7 @@
   };
   let photoDbPromise;
   const allObjectUrls = new Set();
+  const photoUrlCache = new Map();
 
   function makeElement(tag, className, text) {
     const element = document.createElement(tag);
@@ -1236,7 +1238,8 @@
     }
 
     function openCropper(file, handler) {
-      if (!file || !file.type.startsWith('image/')) return showToast('请选择图片文件');
+      const looksLikeImage = !!file && (file.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(file.name || ''));
+      if (!looksLikeImage) return showToast(uiText('请选择图片文件', 'Choose an image file'));
       if (file.size > 25 * 1024 * 1024) return showToast('图片请小于 25MB');
       pendingCropHandler = handler;
       cropOriginalFile = file;
@@ -1272,6 +1275,7 @@
 
     function choosePhoto(handler) {
       pendingCropHandler = handler;
+      if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
       fileInput.value = '';
       fileInput.click();
     }
@@ -1374,6 +1378,14 @@
       if (!item) return;
       lightboxImage.src = item.src;
       lightboxImage.alt = lightboxState.title;
+      lightboxImage.onerror = () => {
+        if (item.blob && !item.retried) {
+          item.retried = true;
+          const retryUrl = URL.createObjectURL(item.blob);
+          allObjectUrls.add(retryUrl);
+          lightboxImage.src = retryUrl;
+        } else showToast(uiText('照片暂时无法显示，请重新打开', 'Photo could not be displayed. Reopen it to retry.'));
+      };
       lightboxTitle.replaceChildren();
       const titleText = lightboxState.title + ' · ' + (lightboxState.index + 1) + '/' + lightboxState.items.length;
       if (lightboxState.mapUrl) {
@@ -1538,20 +1550,43 @@
       gallery.append(head, track, nav);
       stepsList.before(gallery);
 
-      const galleryState = { activeIndex:0, items:[], slides:[], objectUrls:new Set(), editingKey:'', scrollFrame:0 };
+      const galleryState = { activeIndex:0, items:[], slides:[], editingKey:'', scrollFrame:0 };
 
       function revokeGalleryUrls() {
-        galleryState.objectUrls.forEach(url => { URL.revokeObjectURL(url); allObjectUrls.delete(url); });
-        galleryState.objectUrls.clear();
+        // Keep Blob URLs alive for the full page session. WebKit/WKWebView can
+        // show a broken-image mark when an older URL is revoked during a rerender.
       }
 
       function currentTitle(stepState) {
         return stepState.step.querySelector('b')?.textContent.trim() || stepState.title;
       }
 
-      function createTrackedUrl(blob) {
+      function currentMapUrl(stepState) {
+        const decisionMaps = {
+          'uk0927-1': {
+            'notting-hill':'https://www.google.com/maps/dir/?api=1&destination=Notting+Hill+Gate+Station+London',
+            'covent-garden':'https://www.google.com/maps/dir/?api=1&destination=Covent+Garden+London+WC2E+8RF',
+            'emirates-stadium':'https://www.google.com/maps/dir/?api=1&destination=Emirates+Stadium+Hornsey+Road+London+N7+7AJ'
+          },
+          'is1005-1': {
+            'plan-a':'https://www.google.com/maps/dir/?api=1&destination=Kirkjufell+Iceland',
+            'plan-b':'https://www.google.com/maps/dir/?api=1&destination=Perlan+Reykjavik'
+          }
+        };
+        const choices = decisionMaps[stepState.shortKey];
+        if (choices) {
+          try {
+            const saved = JSON.parse(localStorage.getItem('uk-is-2026:decision:' + stepState.shortKey) || '{}');
+            if (saved.confirmed && choices[saved.value]) return choices[saved.value];
+          } catch (_) {}
+        }
+        return stepState.mapUrl;
+      }
+
+      function createTrackedUrl(blob, cacheKey) {
+        if (photoUrlCache.has(cacheKey)) return photoUrlCache.get(cacheKey);
         const url = URL.createObjectURL(blob);
-        galleryState.objectUrls.add(url);
+        photoUrlCache.set(cacheKey, url);
         allObjectUrls.add(url);
         return url;
       }
@@ -1563,8 +1598,9 @@
           alt:stepState.defaultPhoto.alt, credit:stepState.defaultPhoto.credit, creditHref:stepState.defaultPhoto.creditHref
         });
         stepState.record.photos.forEach(photo => photos.push({
-          id:photo.id, kind:'custom', src:createTrackedUrl(photo.blob),
-          previewSrc:createTrackedUrl(photo.previewBlob || photo.blob), alt:currentTitle(stepState)
+          id:photo.id, kind:'custom', blob:photo.blob, previewBlob:photo.previewBlob || null,
+          src:createTrackedUrl(photo.blob, stepState.shortKey + ':' + photo.id + ':' + photo.updatedAt + ':original'),
+          previewSrc:createTrackedUrl(photo.previewBlob || photo.blob, stepState.shortKey + ':' + photo.id + ':' + photo.updatedAt + ':preview'), alt:currentTitle(stepState)
         }));
         return photos;
       }
@@ -1607,7 +1643,10 @@
           renderGallery(stepState.shortKey);
           enterEditing(stepState.shortKey);
           photoUi.showToast(uiText('照片已保存', 'Photo saved'));
-        }).catch(() => photoUi.showToast(uiText('照片保存失败，请重试', 'Could not save the photo')));
+        }).catch(error => {
+          const full = error?.name === 'QuotaExceededError';
+          photoUi.showToast(full ? uiText('浏览器照片空间已满，请删除旧照片后再试', 'Browser photo storage is full') : uiText('照片保存失败，请重试', 'Could not save the photo'));
+        });
       }
 
       function chooseFor(stepState, mode, photoId) {
@@ -1619,9 +1658,11 @@
         stepState.record.ratio = ratios[(ratios.indexOf(stepState.record.ratio) + 1) % ratios.length];
         const slide = galleryState.slides.find(element => element.dataset.stepKey === stepState.shortKey);
         const visual = slide?.querySelector('.gallery-visual');
-        if (visual) {
+          if (visual) {
           ratios.forEach(ratio => visual.classList.remove('ratio-' + ratio));
           visual.classList.add('ratio-' + stepState.record.ratio);
+          const button = slide?.querySelector('[aria-label="' + uiText('切换显示比例', 'Change display ratio') + '"]');
+          if (button) button.textContent = stepState.record.ratio === 'original' ? uiText('原图', 'Original') : stepState.record.ratio.replace('-', ':');
         }
         writePhotoRecord(stepState.record).then(() => {
           enterEditing(stepState.shortKey);
@@ -1678,7 +1719,7 @@
         } : null;
         const startId = selectedId || item.cover.id;
         const index = Math.max(0, item.photos.findIndex(photo => photo.id === startId));
-        photoUi.openLightbox(item.photos, index, currentTitle(item.stepState), item.stepState.mapUrl, manager);
+        photoUi.openLightbox(item.photos, index, currentTitle(item.stepState), currentMapUrl(item.stepState), manager);
       }
 
       function bindLongPress(slide, item) {
@@ -1742,6 +1783,13 @@
             const image = document.createElement('img');
             image.src = item.cover.previewSrc || item.cover.src;
             image.alt = item.cover.alt || currentTitle(item.stepState);
+            image.addEventListener('error', () => {
+              if (item.cover.src && image.src !== item.cover.src) image.src = item.cover.src;
+              else {
+                image.remove();
+                visual.append(makeElement('span', 'gallery-empty', uiText('轻点重试', 'Tap to retry')));
+              }
+            });
             visual.append(image);
             if (item.photos.length > 1) visual.append(makeElement('span', 'gallery-count', item.photos.length + '×'));
           }
@@ -1766,7 +1814,8 @@
             manage.addEventListener('click', () => openItemLightbox(item, true, item.cover.id));
             actions.append(manage);
           }
-          const ratio = makeElement('button', 'gallery-action', (item.stepState.record.ratio || '16-9').replace('-', ':'));
+          const ratioValue = item.stepState.record.ratio || '16-9';
+          const ratio = makeElement('button', 'gallery-action', ratioValue === 'original' ? uiText('原图', 'Original') : ratioValue.replace('-', ':'));
           ratio.type = 'button';
           ratio.title = uiText('切换显示比例', 'Change display ratio');
           ratio.setAttribute('aria-label', ratio.title);
@@ -1777,9 +1826,10 @@
           meta.append(makeElement('time', 'gallery-time', item.stepState.time));
           const copy = makeElement('div', 'gallery-copy');
           const title = makeElement('b');
-          if (item.stepState.mapUrl) {
+          const mapUrl = currentMapUrl(item.stepState);
+          if (mapUrl) {
             const mapLink = makeElement('a', 'gallery-place-link', currentTitle(item.stepState) + ' ↗');
-            mapLink.href = item.stepState.mapUrl;
+            mapLink.href = mapUrl;
             mapLink.target = '_blank';
             mapLink.rel = 'noopener';
             title.append(mapLink);
