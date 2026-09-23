@@ -102,18 +102,27 @@
     .gallery-slide.is-editing { z-index:7; animation:photo-jiggle .18s ease-in-out infinite alternate; }
     @keyframes photo-jiggle { from { transform:rotate(-1.2deg) scale(.985); } to { transform:rotate(1.2deg) scale(.985); } }
     .gallery-visual { position:relative; z-index:1; display:grid; place-items:center; width:100%; aspect-ratio:16/9; overflow:hidden; background-color:#dcecf2; background-image:radial-gradient(#4cb4e766 18%,transparent 19%); background-size:18px 18px; transition:aspect-ratio .2s ease; }
-    .gallery-visual img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .gallery-visual.has-rendered-photo { background-position:center; background-repeat:no-repeat; background-size:cover; }
+    .gallery-visual img { position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:cover; -webkit-transform:translateZ(0); transform:translateZ(0); -webkit-backface-visibility:hidden; backface-visibility:hidden; }
+    .gallery-visual img.is-loading { opacity:0; }
+    .gallery-visual img.is-ready { opacity:1; }
     .gallery-visual.ratio-4-3 { aspect-ratio:4/3; }
     .gallery-visual.ratio-1-1 { aspect-ratio:1/1; }
     .gallery-visual.ratio-3-2 { aspect-ratio:3/2; }
-    .gallery-visual.ratio-original { aspect-ratio:4/3; background:#101417; }
+    .gallery-visual.ratio-original { aspect-ratio:4/3; background-color:#101417; }
+    .gallery-visual.ratio-original.has-rendered-photo { background-size:contain; }
     .gallery-visual.ratio-original img { object-fit:contain; }
+    .gallery-photo-retry { position:relative; z-index:2; max-width:80%; padding:8px 10px; border:2px solid var(--ink); border-radius:7px; background:#ffffffdf; font-size:.76rem; font-weight:900; text-align:center; }
     .gallery-visual.has-stack::before,.gallery-visual.has-stack::after { content:""; position:absolute; inset:7px 10px -7px; z-index:-1; border:2px solid var(--ink); border-radius:5px; background:#fff; transform:rotate(-1.8deg); }
     .gallery-visual.has-stack::after { inset:12px 4px -12px 16px; transform:rotate(1.7deg); background:#fff4b8; }
     .gallery-count { position:absolute; right:8px; bottom:8px; z-index:3; min-width:32px; padding:4px 7px; border:2px solid #fff; border-radius:999px; box-shadow:2px 2px 0 var(--ink); color:#fff; background:var(--navy); font-size:.72rem; font-weight:950; text-align:center; }
     .gallery-slide.has-photo .gallery-visual { cursor:zoom-in; }
     .gallery-empty { display:grid; place-items:center; width:72px; height:72px; border:2px dashed var(--ink); border-radius:50%; background:#ffffffd9; font-size:1.65rem; }
     .gallery-slide.has-photo .gallery-empty { display:none; }
+    @supports (-webkit-touch-callout:none) {
+      .gallery-slide,.gallery-slide:nth-child(even),.gallery-slide.is-active { -webkit-transform:none; transform:none; }
+      .gallery-visual { isolation:isolate; }
+    }
     .gallery-meta { display:grid; grid-template-columns:auto 1fr; gap:8px; align-items:start; padding:9px 10px 10px; }
     .gallery-time { display:inline-flex; min-width:52px; justify-content:center; padding:4px 6px; border-radius:6px; background:var(--navy); color:#fff; font-size:.73rem; font-weight:950; }
     .gallery-copy b { display:block; line-height:1.35; }
@@ -1081,6 +1090,8 @@
   let photoDbPromise;
   const allObjectUrls = new Set();
   const photoUrlCache = new Map();
+  const thumbnailDataUrlCache = new Map();
+  const thumbnailTaskCache = new Map();
 
   function makeElement(tag, className, text) {
     const element = document.createElement(tag);
@@ -1091,6 +1102,63 @@
 
   function uiText(zh, en) {
     return document.documentElement.lang === 'en' ? en : zh;
+  }
+
+  function blobToDataUrl(blob, cacheKey) {
+    if (thumbnailDataUrlCache.has(cacheKey)) return thumbnailDataUrlCache.get(cacheKey);
+    const task = new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error || new Error('照片缩略图读取失败'));
+      reader.readAsDataURL(blob);
+    }).catch(error => {
+      thumbnailDataUrlCache.delete(cacheKey);
+      throw error;
+    });
+    thumbnailDataUrlCache.set(cacheKey, task);
+    return task;
+  }
+
+  function createSafePreviewBlob(blob) {
+    return new Promise((resolve, reject) => {
+      const sourceUrl = URL.createObjectURL(blob);
+      const image = new Image();
+      const cleanup = () => URL.revokeObjectURL(sourceUrl);
+      image.onload = () => {
+        const maxEdge = 1440;
+        const scale = Math.min(1, maxEdge / Math.max(image.naturalWidth, image.naturalHeight));
+        const width = Math.max(1, Math.round(image.naturalWidth * scale));
+        const height = Math.max(1, Math.round(image.naturalHeight * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d', { alpha:false });
+        if (!context || typeof canvas.toBlob !== 'function') {
+          cleanup();
+          reject(new Error('当前浏览器无法生成照片缩略图'));
+          return;
+        }
+        try {
+          context.fillStyle = '#ffffff';
+          context.fillRect(0, 0, width, height);
+          context.drawImage(image, 0, 0, width, height);
+        } catch (error) {
+          cleanup();
+          reject(error);
+          return;
+        }
+        canvas.toBlob(preview => {
+          cleanup();
+          if (preview) resolve(preview);
+          else reject(new Error('照片缩略图生成失败'));
+        }, 'image/jpeg', .84);
+      };
+      image.onerror = () => {
+        cleanup();
+        reject(new Error('照片缩略图生成失败'));
+      };
+      image.src = sourceUrl;
+    });
   }
 
   function openPhotoDb() {
@@ -1301,12 +1369,17 @@
     });
     cropClose.addEventListener('click', closeCropper);
 
-    keepOriginal.addEventListener('click', () => {
+    keepOriginal.addEventListener('click', async () => {
       if (!cropOriginalFile || !pendingCropHandler) return;
       const handler = pendingCropHandler;
       const originalBlob = cropOriginalFile;
+      keepOriginal.disabled = true;
+      let previewBlob = null;
+      try { previewBlob = await createSafePreviewBlob(originalBlob); }
+      catch (_) {}
+      keepOriginal.disabled = false;
       closeCropper();
-      handler({ originalBlob:originalBlob, previewBlob:null });
+      handler({ originalBlob:originalBlob, previewBlob:previewBlob });
     });
 
     useCrop.addEventListener('click', () => {
@@ -1583,6 +1656,59 @@
         return stepState.mapUrl;
       }
 
+      function safeCardSource(stepState, cover) {
+        if (cover.kind !== 'custom') return Promise.resolve(cover.previewSrc || cover.src);
+        const photo = stepState.record.photos.find(candidate => candidate.id === cover.id);
+        if (!photo) return Promise.reject(new Error('照片记录不存在'));
+        const taskKey = stepState.shortKey + ':' + photo.id + ':' + photo.updatedAt + ':safe-card';
+        if (thumbnailTaskCache.has(taskKey)) return thumbnailTaskCache.get(taskKey);
+        const task = (async () => {
+          if (!photo.previewBlob) {
+            photo.previewBlob = await createSafePreviewBlob(photo.blob);
+            await writePhotoRecord(stepState.record);
+          }
+          return blobToDataUrl(photo.previewBlob, taskKey);
+        })().catch(error => {
+          thumbnailTaskCache.delete(taskKey);
+          throw error;
+        });
+        thumbnailTaskCache.set(taskKey, task);
+        return task;
+      }
+
+      function applyCardSource(image, visual, item) {
+        const token = item.stepState.shortKey + ':' + item.cover.id;
+        image.dataset.photoToken = token;
+        image.classList.add('is-loading');
+        const showRetry = () => {
+          if (!image.isConnected || image.dataset.photoToken !== token) return;
+          image.remove();
+          visual.classList.remove('has-rendered-photo');
+          visual.style.removeProperty('background-image');
+          visual.append(makeElement('span', 'gallery-photo-retry', uiText('轻点可查看原图', 'Tap to view the original')));
+        };
+        const paint = (source, allowFallback) => {
+          if (!image.isConnected || image.dataset.photoToken !== token || !source) return showRetry();
+          visual.style.backgroundImage = 'url("' + source + '")';
+          visual.classList.add('has-rendered-photo');
+          image.onload = () => {
+            if (!image.isConnected || image.dataset.photoToken !== token) return;
+            image.classList.remove('is-loading');
+            image.classList.add('is-ready');
+            // Reading layout after decode nudges older WebKit/WKWebView builds to repaint
+            // images inside transformed horizontal scroll containers.
+            void image.offsetHeight;
+          };
+          image.onerror = () => {
+            if (allowFallback && item.cover.src && source !== item.cover.src) paint(item.cover.src, false);
+            else showRetry();
+          };
+          image.src = source;
+          if (image.complete && image.naturalWidth) image.onload();
+        };
+        safeCardSource(item.stepState, item.cover).then(source => paint(source, true)).catch(() => paint(item.cover.src, false));
+      }
+
       function createTrackedUrl(blob, cacheKey) {
         if (photoUrlCache.has(cacheKey)) return photoUrlCache.get(cacheKey);
         const url = URL.createObjectURL(blob);
@@ -1600,7 +1726,7 @@
         stepState.record.photos.forEach(photo => photos.push({
           id:photo.id, kind:'custom', blob:photo.blob, previewBlob:photo.previewBlob || null,
           src:createTrackedUrl(photo.blob, stepState.shortKey + ':' + photo.id + ':' + photo.updatedAt + ':original'),
-          previewSrc:createTrackedUrl(photo.previewBlob || photo.blob, stepState.shortKey + ':' + photo.id + ':' + photo.updatedAt + ':preview'), alt:currentTitle(stepState)
+          previewSrc:'', alt:currentTitle(stepState)
         }));
         return photos;
       }
@@ -1781,16 +1907,9 @@
           if (item.cover.kind === 'empty') visual.append(makeElement('span', 'gallery-empty', '＋'));
           else {
             const image = document.createElement('img');
-            image.src = item.cover.previewSrc || item.cover.src;
             image.alt = item.cover.alt || currentTitle(item.stepState);
-            image.addEventListener('error', () => {
-              if (item.cover.src && image.src !== item.cover.src) image.src = item.cover.src;
-              else {
-                image.remove();
-                visual.append(makeElement('span', 'gallery-empty', uiText('轻点重试', 'Tap to retry')));
-              }
-            });
             visual.append(image);
+            applyCardSource(image, visual, item);
             if (item.photos.length > 1) visual.append(makeElement('span', 'gallery-count', item.photos.length + '×'));
           }
           const actions = makeElement('div', 'gallery-actions');
